@@ -1,4 +1,10 @@
 # humane-ruby
+
+[![Gem Version](https://badge.fury.io/rb/humane.svg)](https://rubygems.org/gems/humane)
+[![CI](https://github.com/woodie/humane-ruby/actions/workflows/ci.yml/badge.svg)](https://github.com/woodie/humane-ruby/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/woodie/humane-ruby.svg)](https://github.com/woodie/humane-ruby/releases/latest)
+[![License](https://img.shields.io/github/license/woodie/humane-ruby.svg)](LICENSE)
+
 Swift's file sizes and relative dates for Ruby
 
 Finder-accurate file sizes and relative dates for Ruby, modeled on Swift's [`ByteCountFormatter`](https://developer.apple.com/documentation/foundation/bytecountformatter) and [`RelativeDateTimeFormatter`](https://developer.apple.com/documentation/foundation/relativedatetimeformatter) -- not literal ports (both are closed-source, and `TimeFormatter`'s wording is a deliberate departure), but the same idea: a small, configurable formatter object instead of a bare helper method.
