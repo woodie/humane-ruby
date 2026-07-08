@@ -29,12 +29,12 @@ require "humane"
 
 size_formatter = Humane::SizeFormatter.new
 size_formatter.string(from_byte_count: 225_935) # "226 KB" -- 1000-based math,
-                                                  # capitalized units, matching
-                                                  # Finder, not Rails'
-                                                  # number_to_human_size (1024-
-                                                  # based despite the same label)
+                                                # capitalized units, matching
+                                                # Finder, not Rails'
+                                                # number_to_human_size (1024-
+                                                # based despite the same label)
 
-time_formatter = Humane::TimeFormatter.new # collapse_minute: true
+time_formatter = Humane::TimeFormatter.new      # collapse_minute: true
 time_formatter.string(at: scanned_at, relative_to: Time.now)
 # "3 minutes ago" / "3 minutes from now" / "less than a minute ago"
 ```
