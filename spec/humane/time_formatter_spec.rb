@@ -52,7 +52,7 @@ RSpec.describe Humane::TimeFormatter do
       context "15 hours ago" do
         let(:when_time) { base - (15 * 3600) }
 
-        it "displays 15 hours ago, with no 'about' prefix" do
+        it "displays 15 hours ago" do
           expect(formatter.string(at: when_time, relative_to: base)).to eq("15 hours ago")
         end
       end
