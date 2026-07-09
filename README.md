@@ -1,6 +1,5 @@
 # humane-ruby
 
-[![Gem Version](https://badge.fury.io/rb/humane.svg)](https://rubygems.org/gems/humane)
 [![Ruby](https://img.shields.io/badge/Ruby-3.1-red.svg)](https://www.ruby-lang.org/)
 [![CI](https://github.com/woodie/humane-ruby/actions/workflows/ci.yml/badge.svg)](https://github.com/woodie/humane-ruby/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/woodie/humane-ruby.svg)](https://github.com/woodie/humane-ruby/releases/latest)
