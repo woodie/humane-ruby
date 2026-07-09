@@ -28,11 +28,8 @@ gem "humane"
 require "humane"
 
 size_formatter = Humane::SizeFormatter.new
-size_formatter.string(from_byte_count: 225_935) # "226 KB" -- 1000-based math,
-                                                # capitalized units, matching
-                                                # Finder, not Rails'
-                                                # number_to_human_size (1024-
-                                                # based despite the same label)
+size_formatter.string(from_byte_count: 225_935)
+# "226 KB" -- 1000-based math, capitalized units, matching Mac Finder
 
 time_formatter = Humane::TimeFormatter.new      # collapse_minute: true
 time_formatter.string(at: scanned_at, relative_to: Time.now)
