@@ -25,19 +25,22 @@ Returns from_byte_count as a Finder-style human-readable string.
 ## lib/humane/time_formatter.rb
 
 ### `Humane::TimeFormatter` (class)
-Formats one time relative to another the way Finder-adjacent tools do:
-symmetric "X ago" / "X from now" phrasing, no "about" prefix on the hour
-bucket -- a deliberate departure from RelativeDateTimeFormatter's actual
-asymmetric output ("X ago" / "in X"), not an attempt to reproduce it
-verbatim.
+Formats one time relative to another the way RelativeDateTimeFormatter
+does: asymmetric "X ago" / "in X" phrasing, no "about" prefix on the hour
+bucket. An earlier version used symmetric "X ago" / "X from now" wording,
+billed as a "deliberate departure" -- but that departure wasn't earning
+its keep against this library's actual goal (match what
+RelativeDateTimeFormatter, the API this is modeled on, actually outputs),
+so it was reverted.
 
 ### `Humane::TimeFormatter#initialize`
 collapse_minute renders any duration under 60 seconds as "less than a
-minute ago"/"less than a minute from now" instead of counting seconds.
+minute ago"/"in less than a minute" instead of counting seconds.
 Defaults to true -- Rails' distance_of_time_in_words, Go's
 justincampbell/timeago, and zouk's own RelativeDateTimeFormatter wrapper
 all do this in practice; Swift's formatter has no such bucket natively,
-so there's no "pure" behavior being overridden here.
+so there's no "pure" behavior being overridden here. The future phrasing
+follows the same asymmetric "in X" pattern as the counted buckets below.
 
 ### `Humane::TimeFormatter#string`
 Swift's localizedString(for:relativeTo:) uses "for:" as its first
@@ -50,6 +53,6 @@ RELATIVE TO that one".
 
     string(at: t, relative_to: t)             == "less than a minute ago"
     string(at: t - 180, relative_to: t)       == "3 minutes ago"
-    string(at: t + 180, relative_to: t)       == "3 minutes from now"
+    string(at: t + 180, relative_to: t)       == "in 3 minutes"
     string(at: t - 15 * 3600, relative_to: t) == "15 hours ago"
     string(at: t - 30 * 3600, relative_to: t) == "1 day ago"

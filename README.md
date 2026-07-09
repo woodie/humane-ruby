@@ -8,7 +8,7 @@
 
 Swift's file sizes and relative dates for Ruby
 
-Finder-accurate file sizes and relative dates for Ruby, modeled on Swift's [`ByteCountFormatter`](https://developer.apple.com/documentation/foundation/bytecountformatter) and [`RelativeDateTimeFormatter`](https://developer.apple.com/documentation/foundation/relativedatetimeformatter) -- not literal ports (both are closed-source, and `TimeFormatter`'s wording is a deliberate departure), but the same idea: a small, configurable formatter object instead of a bare helper method.
+Finder-accurate file sizes and relative dates for Ruby, modeled on Swift's [`ByteCountFormatter`](https://developer.apple.com/documentation/foundation/bytecountformatter) and [`RelativeDateTimeFormatter`](https://developer.apple.com/documentation/foundation/relativedatetimeformatter) -- not literal ports (both are closed-source), but the same idea and the same wording: a small, configurable formatter object instead of a bare helper method.
 
 ## Install
 
@@ -36,7 +36,7 @@ size_formatter.string(from_byte_count: 225_935) # "226 KB" -- 1000-based math,
 
 time_formatter = Humane::TimeFormatter.new      # collapse_minute: true
 time_formatter.string(at: scanned_at, relative_to: Time.now)
-# "3 minutes ago" / "3 minutes from now" / "less than a minute ago"
+# "3 minutes ago" / "in 3 minutes" / "less than a minute ago"
 ```
 
 `Humane::TimeFormatter.new` uses `at:`, not `for:` -- Ruby's `for` is a

@@ -66,21 +66,25 @@ for the full reasoning, summarized here:
   here needs yet. 2-significant-digit rounding (one decimal when the integer
   part is a single digit, none once it hits two), 1000-based math, capitalized
   `KB`/`MB`/... labels.
-- **`Humane::TimeFormatter`**: `#string(at:relative_to:)`, symmetric
-  `"X ago"` / `"X from now"` wording -- a deliberate departure from
-  `RelativeDateTimeFormatter`'s actual asymmetric output (`"X ago"` / `"in X"`).
-  No `"about"` prefix on the hour bucket. `date_time_style`/`:named`
-  (`"yesterday"`, calendar-boundary-aware) isn't implemented. `at:`, not
-  Swift's `for:` -- Ruby's `for` is a reserved word; see
-  `docs/COMMENTS.md` for why that rules out matching the label literally.
+- **`Humane::TimeFormatter`**: `#string(at:relative_to:)`, asymmetric
+  `"X ago"` / `"in X"` wording, matching `RelativeDateTimeFormatter`'s actual
+  output exactly. `v0.1.0` shipped symmetric `"X ago"` / `"X from now"`
+  wording instead, documented as "a deliberate departure" -- reverted in
+  `v0.2.0` once it became clear that departure contradicted this library's own
+  premise (matching what Swift/Finder-adjacent APIs actually do, the same bar
+  `SizeFormatter` was held to). No `"about"` prefix on the hour bucket.
+  `date_time_style`/`:named` (`"yesterday"`, calendar-boundary-aware) isn't
+  implemented. `at:`, not Swift's `for:` -- Ruby's `for` is a reserved word;
+  see `docs/COMMENTS.md` for why that rules out matching the label literally.
 - **`collapse_minute:`** (default `true`): renders anything under 60 seconds as
-  `"less than a minute ago"`/`"...from now"`. Doesn't exist in
+  `"less than a minute ago"`/`"in less than a minute"`. Doesn't exist in
   `RelativeDateTimeFormatter` at all -- zouk's own `ScanEntry.timeAgo` bolts a
   manual `< 30`-second clamp on top of the formatter for exactly this reason.
   Ruby's keyword-arg defaults don't have Go's zero-value problem here --
   `Humane::TimeFormatter.new` with no arguments already gets `collapse_minute:
   true`, no constructor-function workaround needed the way Go's `TimeFormatter`
-  requires `NewTimeFormatter()`.
+  requires `NewTimeFormatter()`. Future-side wording follows the same
+  asymmetric `"in X"` pattern as the counted buckets.
 
 ## Sandbox limitation
 
@@ -112,10 +116,19 @@ directly. Released as `scandalous` `2.2.0` -- confirmed via `bundle exec
 rspec`, 29/29 passing, including the long-standing future-date bug
 (`"X ago"` instead of `"X from now"`) finally fixed.
 
+`v0.2.0`: `Humane::TimeFormatter`'s future-side wording changed from symmetric
+`"X from now"` to asymmetric `"in X"`, matching `RelativeDateTimeFormatter`
+exactly -- see "Design decisions" above. Breaking change to the string
+output; `scandalous` (and its spec suite) needs a follow-up pass once this is
+tagged and published, since it's currently locked to the old `"X from now"`
+wording.
+
 ## Next up
 
-Nothing outstanding. If scope ever needs to grow: `Humane::SizeFormatter` has
-no `allowed_units`/`count_style` (Finder's style is the only one anything
-downstream needs today), and `Humane::TimeFormatter` has no `:named` style
-(`"yesterday"`, calendar-boundary-aware) -- both left out deliberately per
-"Design decisions" above, not gaps to fill without a real need.
+Nothing outstanding on the formatters themselves. If scope ever needs to
+grow: `Humane::SizeFormatter` has no `allowed_units`/`count_style` (Finder's
+style is the only one anything downstream needs today), and
+`Humane::TimeFormatter` has no `:named` style (`"yesterday"`,
+calendar-boundary-aware) -- both left out deliberately per "Design decisions"
+above, not gaps to fill without a real need. Outstanding: propagate the
+`v0.2.0` wording change into `scandalous`.

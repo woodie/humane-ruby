@@ -76,16 +76,16 @@ RSpec.describe Humane::TimeFormatter do
       context "45 seconds from now" do
         let(:when_time) { base + 45 }
 
-        it "displays less than a minute from now" do
-          expect(formatter.string(at: when_time, relative_to: base)).to eq("less than a minute from now")
+        it "displays in less than a minute" do
+          expect(formatter.string(at: when_time, relative_to: base)).to eq("in less than a minute")
         end
       end
 
       context "3 minutes from now" do
         let(:when_time) { base + 180 }
 
-        it "displays 3 minutes from now" do
-          expect(formatter.string(at: when_time, relative_to: base)).to eq("3 minutes from now")
+        it "displays in 3 minutes" do
+          expect(formatter.string(at: when_time, relative_to: base)).to eq("in 3 minutes")
         end
       end
     end
@@ -120,8 +120,8 @@ RSpec.describe Humane::TimeFormatter do
       context "45 seconds from now" do
         let(:when_time) { base + 45 }
 
-        it "displays 45 seconds from now" do
-          expect(formatter.string(at: when_time, relative_to: base)).to eq("45 seconds from now")
+        it "displays in 45 seconds" do
+          expect(formatter.string(at: when_time, relative_to: base)).to eq("in 45 seconds")
         end
       end
     end

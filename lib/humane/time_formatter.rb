@@ -15,7 +15,7 @@ module Humane
       seconds = seconds.abs
 
       if @collapse_minute && seconds < 60
-        return future ? "less than a minute from now" : "less than a minute ago"
+        return future ? "in less than a minute" : "less than a minute ago"
       end
 
       text =
@@ -29,7 +29,7 @@ module Humane
           pluralize((seconds / 86_400.0).round, "day")
         end
 
-      future ? "#{text} from now" : "#{text} ago"
+      future ? "in #{text}" : "#{text} ago"
     end
 
     private
