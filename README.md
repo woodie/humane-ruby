@@ -21,22 +21,6 @@ or in a `Gemfile`:
 gem "humane"
 ```
 
-## Purpose
-
-This library emulates Swift's ByteCountFormatter and RelativeDateTimeFormatter.
-
-```swift
-humanSize = ByteCountFormatter.string(fromByteCount: Int64(size), countStyle: .file)
-
-if abs(now.timeIntervalSince(time)) < 30 {
-    timeAgo = "less than a minute ago"
-} else {
-    let formatter = RelativeDateTimeFormatter()
-    formatter.unitsStyle = .full
-    timeAgo = formatter.localizedString(for: time, relativeTo: now)
-}
-```
-
 ## Usage
 
 ```ruby
@@ -56,6 +40,22 @@ reserved word, and while a `for:` keyword argument technically parses, reading
 it back out inside the method needs `binding.local_variable_get(:for)`. Not
 worth it just to match Swift's `localizedString(for:relativeTo:)` label
 literally.
+
+## Purpose
+
+This library emulates Swift's ByteCountFormatter and RelativeDateTimeFormatter.
+
+```swift
+humanSize = ByteCountFormatter.string(fromByteCount: Int64(size), countStyle: .file)
+
+if abs(now.timeIntervalSince(time)) < 30 {
+    timeAgo = "less than a minute ago"
+} else {
+    let formatter = RelativeDateTimeFormatter()
+    formatter.unitsStyle = .full
+    timeAgo = formatter.localizedString(for: time, relativeTo: now)
+}
+```
 
 ## Scope
 
