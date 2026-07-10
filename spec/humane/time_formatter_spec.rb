@@ -6,7 +6,7 @@ RSpec.describe Humane::TimeFormatter do
   let(:base) { Time.new(2026, 7, 8, 12, 0, 0, "+00:00") }
 
   describe "#string" do
-    context "with collapse_minute (the default)" do
+    context "with include_seconds: false (the default)" do
       subject(:formatter) { described_class.new }
 
       context "just now" do
@@ -90,8 +90,8 @@ RSpec.describe Humane::TimeFormatter do
       end
     end
 
-    context "with collapse_minute: false" do
-      subject(:formatter) { described_class.new(collapse_minute: false) }
+    context "with include_seconds: true" do
+      subject(:formatter) { described_class.new(include_seconds: true) }
 
       context "just now" do
         let(:when_time) { base }

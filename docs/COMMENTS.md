@@ -34,13 +34,16 @@ RelativeDateTimeFormatter, the API this is modeled on, actually outputs),
 so it was reverted.
 
 ### `Humane::TimeFormatter#initialize`
-collapse_minute renders any duration under 60 seconds as "less than a
-minute ago"/"in less than a minute" instead of counting seconds.
-Defaults to true -- Rails' distance_of_time_in_words, Go's
+include_seconds: false (the default) renders any duration under 60
+seconds as "less than a minute ago"/"in less than a minute" instead of
+counting seconds -- Rails' distance_of_time_in_words, Go's
 justincampbell/timeago, and zouk's own RelativeDateTimeFormatter wrapper
 all do this in practice; Swift's formatter has no such bucket natively,
 so there's no "pure" behavior being overridden here. The future phrasing
 follows the same asymmetric "in X" pattern as the counted buckets below.
+Named and defaulted after ActionView's own include_seconds (v0.3.0,
+renamed from collapse_minute: true -- an exact polarity inversion, so
+the default behavior is unchanged; see docs/releases/v0.3.0.md).
 
 ### `Humane::TimeFormatter#string`
 Swift's localizedString(for:relativeTo:) uses "for:" as its first

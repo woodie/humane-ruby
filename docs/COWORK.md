@@ -123,12 +123,39 @@ output; `scandalous` (and its spec suite) needs a follow-up pass once this is
 tagged and published, since it's currently locked to the old `"X from now"`
 wording.
 
+`v0.3.0`: `Humane::TimeFormatter.new`'s `collapse_minute:` (default `true`) renamed
+to `include_seconds:` (default `false`) -- an exact polarity inversion, so default
+behavior is unchanged; only explicit `collapse_minute: false` callers need to change
+to `include_seconds: true`. Named after ActionView's own `include_seconds` (same
+default), and deliberately moves off "collapse" language now that `humane-swift`'s
+`approximate` option (ActionView-inspired "about"/"in about" prefixing) exists and
+would otherwise compete for that word -- see `humane-swift/docs/COWORK.md` for the
+full cross-repo naming discussion this came out of. `bundle` isn't installed in the
+Cowork sandbox (no Ruby version mismatch this time -- the gemspec's own floor is
+`>= 3.0`, which the sandbox's `3.0.2` satisfies), so a real `bundle exec rspec` run
+couldn't happen here; instead, ran the renamed formatter directly via `ruby -Ilib`
+against every case the updated spec covers (both `include_seconds: false` and
+`true`, past and future) and all matched. That's real confirmation of the behavior,
+just not a substitute for the actual spec suite -- still needs `bundle exec rspec`
+on woodie's Mac before tagging. `scandalous` doesn't pass this option
+explicitly, so it isn't affected, but its `humane` pin (`"~> 0.1"`) still hasn't
+picked up `v0.2.0` either -- both are bundled follow-up work below.
+
 ## Next up
 
-Nothing outstanding on the formatters themselves. If scope ever needs to
-grow: `Humane::SizeFormatter` has no `allowed_units`/`count_style` (Finder's
-style is the only one anything downstream needs today), and
-`Humane::TimeFormatter` has no `:named` style (`"yesterday"`,
-calendar-boundary-aware) -- both left out deliberately per "Design decisions"
-above, not gaps to fill without a real need. Outstanding: propagate the
-`v0.2.0` wording change into `scandalous`.
+1. Confirm `v0.3.0` via a real `bundle exec rspec` run, then tag and publish.
+2. Propagate both the `v0.2.0` wording change and `v0.3.0` rename into `scandalous`,
+   bumping its `humane` pin past `"~> 0.1"`.
+3. Decide whether `humane-swift`'s `approximate` option (ActionView-inspired
+   "about"/"in about" prefixing on hour-plus buckets) gets backported here too --
+   see `humane-swift/docs/COWORK.md` "Next up".
+4. `Humane::SizeFormatter` has no `allowed_units`/`count_style` (Finder's style is
+   the only one anything downstream needs today), and `Humane::TimeFormatter` has no
+   `:named` style (`"yesterday"`, calendar-boundary-aware) -- both left out
+   deliberately per "Design decisions" above, not gaps to fill without a real need.
+5. `humane-swift`'s real-hardware testing found `ByteCountFormatter`'s actual output
+   diverges from this gem's hand-rolled 2-significant-digit math in a few cases
+   (zero bytes, byte-scale labels, some GB-scale precision) -- see
+   `humane-swift/docs/COWORK.md` "Current state" for specifics. Worth deciding
+   whether to correct `Humane::SizeFormatter` toward exact parity or document the gap
+   as accepted.

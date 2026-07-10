@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
 module Humane
-  # Formats one time relative to another the way Finder-adjacent tools do, symmetric "X ago"/"X from now".
+  # Formats one time relative to another the way Finder-adjacent tools do.
   class TimeFormatter
-    # collapse_minute buckets anything under a minute as "less than a minute ago/from now". Defaults to true.
-    def initialize(collapse_minute: true)
-      @collapse_minute = collapse_minute
+    # include_seconds shows exact seconds under a minute instead of collapsing to "less than a minute ago/in less than a minute". Defaults to false, matching ActionView's include_seconds.
+    def initialize(include_seconds: false)
+      @include_seconds = include_seconds
     end
 
     # Returns the time at `at` relative to `relative_to` as a human-readable string.
@@ -14,7 +14,7 @@ module Humane
       future = seconds.negative?
       seconds = seconds.abs
 
-      if @collapse_minute && seconds < 60
+      if !@include_seconds && seconds < 60
         return future ? "in less than a minute" : "less than a minute ago"
       end
 
