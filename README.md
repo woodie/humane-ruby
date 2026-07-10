@@ -33,6 +33,11 @@ let formatter = RelativeDateTimeFormatter(); formatter.unitsStyle = .full
 formatter.localizedString(for: time, relativeTo: now) // "3 minutes ago"
 ```
 
+If you're writing Swift directly rather than calling Foundation by hand,
+[`humane-swift`](https://github.com/woodie/humane-swift) wraps these same two
+formatters with the identical API shape -- including the
+`includeSeconds`/`approximate` options below.
+
 ## Install
 
 ```
