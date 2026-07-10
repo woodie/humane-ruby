@@ -76,15 +76,26 @@ for the full reasoning, summarized here:
   `date_time_style`/`:named` (`"yesterday"`, calendar-boundary-aware) isn't
   implemented. `at:`, not Swift's `for:` -- Ruby's `for` is a reserved word;
   see `docs/COMMENTS.md` for why that rules out matching the label literally.
-- **`collapse_minute:`** (default `true`): renders anything under 60 seconds as
-  `"less than a minute ago"`/`"in less than a minute"`. Doesn't exist in
-  `RelativeDateTimeFormatter` at all -- zouk's own `ScanEntry.timeAgo` bolts a
-  manual `< 30`-second clamp on top of the formatter for exactly this reason.
-  Ruby's keyword-arg defaults don't have Go's zero-value problem here --
-  `Humane::TimeFormatter.new` with no arguments already gets `collapse_minute:
-  true`, no constructor-function workaround needed the way Go's `TimeFormatter`
-  requires `NewTimeFormatter()`. Future-side wording follows the same
-  asymmetric `"in X"` pattern as the counted buckets.
+- **`include_seconds:`** (default `false`; renamed from `collapse_minute:` in
+  `v0.3.0`, an exact polarity inversion -- see `docs/releases/v0.3.0.md`): when
+  `false`, renders anything under 60 seconds as `"less than a minute ago"`/`"in
+  less than a minute"`. Doesn't exist in `RelativeDateTimeFormatter` at all --
+  zouk's own `ScanEntry.timeAgo` bolts a manual clamp on top of the formatter for
+  exactly this reason. Ruby's keyword-arg defaults don't have Go's zero-value
+  problem here -- `Humane::TimeFormatter.new` with no arguments already gets the
+  recommended default, no constructor-function workaround needed the way Go's
+  `TimeFormatter` requires `NewTimeFormatter()`. Future-side wording follows the
+  same asymmetric `"in X"` pattern as the counted buckets.
+- **`approximate:`** (default `false`; added in `v0.4.0`, ported from
+  `humane-swift`'s identically-named option -- see `docs/releases/v0.4.0.md`):
+  when `true`, prefixes `"about"`/`"in about"` on buckets of an hour or larger,
+  matching ActionView's `distance_of_time_in_words` past its own "about"
+  threshold. For contexts that can't live-refresh a rendered time (a web
+  response, a cached page), a precise-looking "15 hours ago" overstates its own
+  accuracy; `scandalous`'s listing is the motivating case. Simpler to implement
+  here than in Swift: `#string` builds the bare quantity phrase before wrapping
+  it in `"X ago"`/`"in X"`, so prefixing `"about "` first composes correctly for
+  both directions with no string-surgery needed.
 
 ## Sandbox limitation
 
@@ -135,25 +146,35 @@ Cowork sandbox (no Ruby version mismatch this time -- the gemspec's own floor is
 `>= 3.0`, which the sandbox's `3.0.2` satisfies), so a real `bundle exec rspec` run
 couldn't happen here; instead, ran the renamed formatter directly via `ruby -Ilib`
 against every case the updated spec covers (both `include_seconds: false` and
-`true`, past and future) and all matched. That's real confirmation of the behavior,
-just not a substitute for the actual spec suite -- still needs `bundle exec rspec`
-on woodie's Mac before tagging. `scandalous` doesn't pass this option
-explicitly, so it isn't affected, but its `humane` pin (`"~> 0.1"`) still hasn't
-picked up `v0.2.0` either -- both are bundled follow-up work below.
+`true`, past and future) and all matched. Confirmed for real afterward via
+`bundle exec rspec` on woodie's Mac -- 22/22 passing. Tagged, pushed, and
+**published to RubyGems.org as `humane` `0.3.0`.**
+
+`scandalous` picked up both `v0.2.0` (already had been, just undocumented -- its
+spec already asserted the asymmetric wording) and `v0.3.0` (no behavior change,
+since it never passed `collapse_minute:`/`include_seconds:` explicitly) in the same
+session. Its `Gemfile` pin went `"~> 0.1"` -> `"~> 0.2"` (undocumented, found
+already in place) -> `"~> 0.3"`. `lambada` (the Go sibling's consumer) went through
+the equivalent motions on its own pin -- see `humane`'s own `docs/COWORK.md`.
+
+`v0.4.0`: `Humane::TimeFormatter` gains `approximate:` (default `false`), ported
+from `humane-swift`'s identically-named option -- see "Design decisions" above and
+`docs/releases/v0.4.0.md`. Additive, not breaking. Confirmed via `ruby -Ilib`
+smoke test (bundler unavailable in this sandbox); still needs a real
+`bundle exec rspec` run before tagging. `scandalous`'s `time_ago` is being wired to
+`approximate: true` in the same session, since its listing is exactly the
+can't-live-refresh case this option exists for.
 
 ## Next up
 
-1. Confirm `v0.3.0` via a real `bundle exec rspec` run, then tag and publish.
-2. Propagate both the `v0.2.0` wording change and `v0.3.0` rename into `scandalous`,
-   bumping its `humane` pin past `"~> 0.1"`.
-3. Decide whether `humane-swift`'s `approximate` option (ActionView-inspired
-   "about"/"in about" prefixing on hour-plus buckets) gets backported here too --
-   see `humane-swift/docs/COWORK.md` "Next up".
-4. `Humane::SizeFormatter` has no `allowed_units`/`count_style` (Finder's style is
+1. Confirm `v0.4.0` via a real `bundle exec rspec` run, then tag and publish.
+2. Confirm `scandalous`'s `approximate: true` wiring (see its own commit) and the
+   `Gemfile` pin bump that goes with it.
+3. `Humane::SizeFormatter` has no `allowed_units`/`count_style` (Finder's style is
    the only one anything downstream needs today), and `Humane::TimeFormatter` has no
    `:named` style (`"yesterday"`, calendar-boundary-aware) -- both left out
    deliberately per "Design decisions" above, not gaps to fill without a real need.
-5. `humane-swift`'s real-hardware testing found `ByteCountFormatter`'s actual output
+4. `humane-swift`'s real-hardware testing found `ByteCountFormatter`'s actual output
    diverges from this gem's hand-rolled 2-significant-digit math in a few cases
    (zero bytes, byte-scale labels, some GB-scale precision) -- see
    `humane-swift/docs/COWORK.md` "Current state" for specifics. Worth deciding

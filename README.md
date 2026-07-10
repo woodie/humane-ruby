@@ -45,6 +45,24 @@ or in a `Gemfile`:
 gem "humane"
 ```
 
+## Beyond Foundation's defaults
+
+Two options on `Humane::TimeFormatter`, both off by default so it matches
+`RelativeDateTimeFormatter` exactly out of the box:
+
+- `include_seconds` (default `false`): below a minute, collapses to "less than a
+  minute ago"/"in less than a minute" instead of an exact second count. Named after
+  ActionView's `include_seconds`, which defaults the same way.
+- `approximate` (default `false`): prefixes "about"/"in about" on buckets of an hour
+  or larger, the way ActionView's `distance_of_time_in_words` does past that same
+  boundary -- for a render that can't refresh itself and shouldn't overstate its own
+  precision.
+
+```ruby
+Humane::TimeFormatter.new(approximate: true).string(at: t - 15 * 3600, relative_to: t)
+# => "about 15 hours ago"
+```
+
 ## Scope
 
 Finder's `.file` byte-count style, and a numeric (non-calendar-aware)

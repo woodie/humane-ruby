@@ -27,11 +27,14 @@ Returns from_byte_count as a Finder-style human-readable string.
 ### `Humane::TimeFormatter` (class)
 Formats one time relative to another the way RelativeDateTimeFormatter
 does: asymmetric "X ago" / "in X" phrasing, no "about" prefix on the hour
-bucket. An earlier version used symmetric "X ago" / "X from now" wording,
-billed as a "deliberate departure" -- but that departure wasn't earning
-its keep against this library's actual goal (match what
+bucket by default. An earlier version used symmetric "X ago" / "X from
+now" wording, billed as a "deliberate departure" -- but that departure
+wasn't earning its keep against this library's actual goal (match what
 RelativeDateTimeFormatter, the API this is modeled on, actually outputs),
-so it was reverted.
+so it was reverted. `approximate: true` (v0.4.0, see below) opts into
+the "about" prefix for contexts that can't earn back the precision --
+still off by default, since matching Foundation's raw output is the
+baseline this library is held to.
 
 ### `Humane::TimeFormatter#initialize`
 include_seconds: false (the default) renders any duration under 60
@@ -44,6 +47,18 @@ follows the same asymmetric "in X" pattern as the counted buckets below.
 Named and defaulted after ActionView's own include_seconds (v0.3.0,
 renamed from collapse_minute: true -- an exact polarity inversion, so
 the default behavior is unchanged; see docs/releases/v0.3.0.md).
+
+approximate: false (the default) prefixes "about"/"in about" onto
+buckets of an hour or larger when true, matching ActionView's
+distance_of_time_in_words past its own "about" threshold -- for a
+static render (a web response, a cached page) that can't live-refresh,
+exact-looking precision on a rounded value is misleading. Ported from
+humane-swift's identically-named option (v0.1.0); this Ruby port is
+actually simpler than Swift's, since `text` is built bare here (no
+"ago"/"in " wrapping yet) -- prefixing "about " before that wrapping
+composes correctly for both directions with no string-surgery needed,
+unlike Swift, which has to post-process RelativeDateTimeFormatter's
+already-complete phrase.
 
 ### `Humane::TimeFormatter#string`
 Swift's localizedString(for:relativeTo:) uses "for:" as its first

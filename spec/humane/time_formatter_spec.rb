@@ -125,5 +125,57 @@ RSpec.describe Humane::TimeFormatter do
         end
       end
     end
+
+    context "with approximate: true" do
+      subject(:formatter) { described_class.new(approximate: true) }
+
+      context "59 minutes ago" do
+        let(:when_time) { base - (59 * 60) }
+
+        it "stays exact below the hour" do
+          expect(formatter.string(at: when_time, relative_to: base)).to eq("59 minutes ago")
+        end
+      end
+
+      context "exactly 1 hour ago" do
+        let(:when_time) { base - 3600 }
+
+        it "prefixes about, the threshold is inclusive" do
+          expect(formatter.string(at: when_time, relative_to: base)).to eq("about 1 hour ago")
+        end
+      end
+
+      context "15 hours ago" do
+        let(:when_time) { base - (15 * 3600) }
+
+        it "prefixes about" do
+          expect(formatter.string(at: when_time, relative_to: base)).to eq("about 15 hours ago")
+        end
+      end
+
+      context "30 hours ago" do
+        let(:when_time) { base - (30 * 3600) }
+
+        it "prefixes about on the rolled-up day bucket" do
+          expect(formatter.string(at: when_time, relative_to: base)).to eq("about 1 day ago")
+        end
+      end
+
+      context "3 minutes from now" do
+        let(:when_time) { base + 180 }
+
+        it "stays exact below the hour" do
+          expect(formatter.string(at: when_time, relative_to: base)).to eq("in 3 minutes")
+        end
+      end
+
+      context "3 hours from now" do
+        let(:when_time) { base + (3 * 3600) }
+
+        it "prefixes in about" do
+          expect(formatter.string(at: when_time, relative_to: base)).to eq("in about 3 hours")
+        end
+      end
+    end
   end
 end

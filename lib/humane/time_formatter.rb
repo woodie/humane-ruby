@@ -4,8 +4,10 @@ module Humane
   # Formats one time relative to another the way Finder-adjacent tools do.
   class TimeFormatter
     # include_seconds shows exact seconds under a minute instead of collapsing to "less than a minute ago/in less than a minute". Defaults to false, matching ActionView's include_seconds.
-    def initialize(include_seconds: false)
+    # approximate prefixes "about"/"in about" on buckets of an hour or more, matching ActionView's distance_of_time_in_words past that same boundary. Defaults to false.
+    def initialize(include_seconds: false, approximate: false)
       @include_seconds = include_seconds
+      @approximate = approximate
     end
 
     # Returns the time at `at` relative to `relative_to` as a human-readable string.
@@ -28,6 +30,8 @@ module Humane
         else
           pluralize((seconds / 86_400.0).round, "day")
         end
+
+      text = "about #{text}" if @approximate && seconds >= 3600
 
       future ? "in #{text}" : "#{text} ago"
     end
