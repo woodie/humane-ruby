@@ -160,21 +160,27 @@ the equivalent motions on its own pin -- see `humane`'s own `docs/COWORK.md`.
 `v0.4.0`: `Humane::TimeFormatter` gains `approximate:` (default `false`), ported
 from `humane-swift`'s identically-named option -- see "Design decisions" above and
 `docs/releases/v0.4.0.md`. Additive, not breaking. Confirmed via `ruby -Ilib`
-smoke test (bundler unavailable in this sandbox); still needs a real
-`bundle exec rspec` run before tagging. `scandalous`'s `time_ago` is being wired to
-`approximate: true` in the same session, since its listing is exactly the
-can't-live-refresh case this option exists for.
+smoke test (bundler unavailable in this sandbox), then for real via `bundle exec
+rspec` on woodie's Mac. Tagged, pushed, and **published to RubyGems.org as
+`humane` `0.4.0`** (confirmed via `gem list -r humane`). `scandalous`'s
+`time_ago` picked up `approximate: true` in the same window, confirmed live
+(`"about 14 hours ago"`), released as `scandalous` `2.5.0`.
+
+Also this session: README's Swift code sample (raw `ByteCountFormatter`/
+`RelativeDateTimeFormatter` calls) now links to `humane-swift` directly, since
+that's a real, published sibling library now rather than just "the Foundation
+this gem is modeled on."
 
 ## Next up
 
-1. Confirm `v0.4.0` via a real `bundle exec rspec` run, then tag and publish.
-2. Confirm `scandalous`'s `approximate: true` wiring (see its own commit) and the
-   `Gemfile` pin bump that goes with it.
-3. `Humane::SizeFormatter` has no `allowed_units`/`count_style` (Finder's style is
+1. Consider closing `humane-ruby` issue #1 with a pointer to `approximate` as
+   the actual answer to the original "ActionView compatibility mode" ask --
+   not yet done.
+2. `Humane::SizeFormatter` has no `allowed_units`/`count_style` (Finder's style is
    the only one anything downstream needs today), and `Humane::TimeFormatter` has no
    `:named` style (`"yesterday"`, calendar-boundary-aware) -- both left out
    deliberately per "Design decisions" above, not gaps to fill without a real need.
-4. `humane-swift`'s real-hardware testing found `ByteCountFormatter`'s actual output
+3. `humane-swift`'s real-hardware testing found `ByteCountFormatter`'s actual output
    diverges from this gem's hand-rolled 2-significant-digit math in a few cases
    (zero bytes, byte-scale labels, some GB-scale precision) -- see
    `humane-swift/docs/COWORK.md` "Current state" for specifics. Worth deciding
