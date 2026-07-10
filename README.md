@@ -55,13 +55,15 @@ gem "humane"
 Two options on `Humane::TimeFormatter`, both off by default so it matches
 `RelativeDateTimeFormatter` exactly out of the box:
 
-- `include_seconds` (default `false`): below a minute, collapses to "less than a
+- `include_seconds` (default `false`): under 30 seconds, collapses to "less than a
   minute ago"/"in less than a minute" instead of an exact second count. Named after
   ActionView's `include_seconds`, which defaults the same way.
-- `approximate` (default `false`): prefixes "about"/"in about" on buckets of an hour
-  or larger, the way ActionView's `distance_of_time_in_words` does past that same
-  boundary -- for a render that can't refresh itself and shouldn't overstate its own
-  precision.
+- `approximate` (default `false`): prefixes "about"/"in about" on the hour-scale
+  buckets (1 hour, and 2..24 hours), the way ActionView's `distance_of_time_in_words`
+  does for those same buckets -- for a render that can't refresh itself and shouldn't
+  overstate its own precision. Matches ActionView's own table exactly (down to its
+  44:30/89:30 rounding cutoffs), through the "1 day" bucket; week/month/year buckets
+  are out of scope. See [issue #1](https://github.com/woodie/humane-ruby/issues/1).
 
 ```ruby
 Humane::TimeFormatter.new(approximate: true).string(at: t - 15 * 3600, relative_to: t)

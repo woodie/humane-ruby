@@ -171,11 +171,32 @@ Also this session: README's Swift code sample (raw `ByteCountFormatter`/
 that's a real, published sibling library now rather than just "the Foundation
 this gem is modeled on."
 
+`v0.5.0` (unreleased): `#string` reworked to match the ActionView
+`distance_of_time_in_words` bucket table quoted in issue #1 exactly, through the
+"1 day" row (week/month/year buckets stay out of scope -- narrower than a "full
+featured" port, matching what the scan-server/retriever projects actually need).
+Two behavior changes, both additive to the API surface (no new keyword args):
+`include_seconds: false`'s collapse cutoff moved from 60s to 30s (matching the
+table's first row), and `approximate` narrowed from "about" on any bucket >= 1
+hour to exactly the hour-scale buckets (1 hour, 2..24 hours) -- ActionView's own
+table has no "about 1 day". Bucketing now goes through `distance_in_minutes`
+(seconds/60, rounded once) rather than re-dividing raw seconds per unit, which is
+what produces the table's specific 44:30/89:30/23:59:30 cutoffs and fixes a
+latent rounding-carries-across-a-boundary bug (`59:59:59` used to read "60
+minutes ago" instead of "1 hour ago"). New boundary-pair specs lock in all six
+cutoffs from the table for both directions. Confirmed for real via `bundle exec
+rspec` on woodie's Mac -- 35/35 passing. `humane` and `humane-swift` picked up
+the identical table change in the same session -- see their own `docs/COWORK.md`.
+Issue #1 can now be closed with a pointer to this table match, not just to
+`approximate` existing in the abstract.
+
 ## Next up
 
-1. Consider closing `humane-ruby` issue #1 with a pointer to `approximate` as
-   the actual answer to the original "ActionView compatibility mode" ask --
-   not yet done.
+1. Tag and publish `v0.5.0` to RubyGems, then close `humane-ruby` issue #1
+   pointing to the table match above. `scandalous`/`lambada` don't need a
+   follow-up pass for this specific change -- their documented `approximate`
+   usage (`"about 14 hours ago"`-style, hour-scale) is unaffected; only day-scale
+   `approximate` output and sub-minute rounding below 90 seconds changed.
 2. `Humane::SizeFormatter` has no `allowed_units`/`count_style` (Finder's style is
    the only one anything downstream needs today), and `Humane::TimeFormatter` has no
    `:named` style (`"yesterday"`, calendar-boundary-aware) -- both left out

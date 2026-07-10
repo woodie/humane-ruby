@@ -37,28 +37,28 @@ still off by default, since matching Foundation's raw output is the
 baseline this library is held to.
 
 ### `Humane::TimeFormatter#initialize`
-include_seconds: false (the default) renders any duration under 60
+include_seconds: false (the default) renders any duration under 30
 seconds as "less than a minute ago"/"in less than a minute" instead of
-counting seconds -- Rails' distance_of_time_in_words, Go's
-justincampbell/timeago, and zouk's own RelativeDateTimeFormatter wrapper
-all do this in practice; Swift's formatter has no such bucket natively,
-so there's no "pure" behavior being overridden here. The future phrasing
-follows the same asymmetric "in X" pattern as the counted buckets below.
-Named and defaulted after ActionView's own include_seconds (v0.3.0,
-renamed from collapse_minute: true -- an exact polarity inversion, so
-the default behavior is unchanged; see docs/releases/v0.3.0.md).
+counting seconds -- matching the first row of ActionView's
+distance_of_time_in_words bucket table (see #string below), not an
+arbitrary round number. The future phrasing follows the same asymmetric
+"in X" pattern as the counted buckets below. Named and defaulted after
+ActionView's own include_seconds (v0.3.0, renamed from
+collapse_minute: true -- an exact polarity inversion, so the default
+behavior is unchanged; see docs/releases/v0.3.0.md).
 
-approximate: false (the default) prefixes "about"/"in about" onto
-buckets of an hour or larger when true, matching ActionView's
-distance_of_time_in_words past its own "about" threshold -- for a
-static render (a web response, a cached page) that can't live-refresh,
-exact-looking precision on a rounded value is misleading. Ported from
-humane-swift's identically-named option (v0.1.0); this Ruby port is
-actually simpler than Swift's, since `text` is built bare here (no
-"ago"/"in " wrapping yet) -- prefixing "about " before that wrapping
-composes correctly for both directions with no string-surgery needed,
-unlike Swift, which has to post-process RelativeDateTimeFormatter's
-already-complete phrase.
+approximate: false (the default) prefixes "about"/"in about" onto the
+hour-scale buckets (1 hour, and 2..24 hours) when true, matching
+ActionView's distance_of_time_in_words wording for those exact buckets
+-- for a static render (a web response, a cached page) that can't
+live-refresh, exact-looking precision on a rounded value is misleading.
+Deliberately narrower than the "any bucket >= 1 hour" rule this had in
+v0.4.0: ActionView's own table has no "about" on the day bucket (or
+week/month/year buckets beyond this library's scope), so neither does
+this. Ported from humane-swift's identically-named option (v0.1.0);
+this Ruby port is simpler than Swift's, since `text` is built bare here
+(no "ago"/"in " wrapping yet) -- prefixing "about " before that wrapping
+composes correctly for both directions with no string-surgery needed.
 
 ### `Humane::TimeFormatter#string`
 Swift's localizedString(for:relativeTo:) uses "for:" as its first
@@ -69,8 +69,30 @@ triggers the keyword parser -- not worth it for a label match. "at:"
 reads just as naturally: "the string for the time AT this moment,
 RELATIVE TO that one".
 
-    string(at: t, relative_to: t)             == "less than a minute ago"
-    string(at: t - 180, relative_to: t)       == "3 minutes ago"
-    string(at: t + 180, relative_to: t)       == "in 3 minutes"
-    string(at: t - 15 * 3600, relative_to: t) == "15 hours ago"
-    string(at: t - 30 * 3600, relative_to: t) == "1 day ago"
+Buckets are chosen from `distance_in_minutes` (seconds/60, rounded
+once via Ruby's round-half-up `Float#round`), not by re-dividing raw
+seconds independently per unit. The old per-unit approach let rounding
+carry across a bucket boundary on its own -- 59:59:59 (< 3600s, so the
+old code took the minutes branch) rounded to "60 minutes ago" instead
+of "1 hour ago". Computing distance_in_minutes once and branching on
+*that* is exactly how ActionView's own distance_of_time_in_words works,
+and is what produces its specific, non-obvious cutoffs: the "about 1
+hour" bucket starts at 44 minutes 30 seconds (not 60:00), and "about 2
+hours" starts at 89:30, not 90:00 -- see humane-ruby issue #1
+(https://github.com/woodie/humane-ruby/issues/1) for the full table
+this ports, truncated here at the "1 day" row (week/month/year buckets
+are out of scope -- see "Design decisions" in docs/COWORK.md).
+
+    string(at: t, relative_to: t)                    == "less than a minute ago"
+    string(at: t - 45, relative_to: t)                == "1 minute ago"
+    string(at: t - 180, relative_to: t)               == "3 minutes ago"
+    string(at: t + 180, relative_to: t)               == "in 3 minutes"
+    string(at: t - (44 * 60 + 29), relative_to: t)    == "44 minutes ago"
+    string(at: t - (44 * 60 + 30), relative_to: t)    == "1 hour ago"
+    string(at: t - 15 * 3600, relative_to: t)         == "15 hours ago"
+    string(at: t - 30 * 3600, relative_to: t)         == "1 day ago"
+
+    approx = Humane::TimeFormatter.new(approximate: true)
+    approx.string(at: t - (44 * 60 + 30), relative_to: t) == "about 1 hour ago"
+    approx.string(at: t - 15 * 3600, relative_to: t)      == "about 15 hours ago"
+    approx.string(at: t - 30 * 3600, relative_to: t)      == "1 day ago"  # no "about" -- ActionView's table has none on the day bucket

@@ -20,8 +20,8 @@ RSpec.describe Humane::TimeFormatter do
       context "45 seconds ago" do
         let(:when_time) { base - 45 }
 
-        it "displays less than a minute ago" do
-          expect(formatter.string(at: when_time, relative_to: base)).to eq("less than a minute ago")
+        it "rounds up to 1 minute ago (past the 30-second cutoff)" do
+          expect(formatter.string(at: when_time, relative_to: base)).to eq("1 minute ago")
         end
       end
 
@@ -76,8 +76,8 @@ RSpec.describe Humane::TimeFormatter do
       context "45 seconds from now" do
         let(:when_time) { base + 45 }
 
-        it "displays in less than a minute" do
-          expect(formatter.string(at: when_time, relative_to: base)).to eq("in less than a minute")
+        it "rounds up to in 1 minute (past the 30-second cutoff)" do
+          expect(formatter.string(at: when_time, relative_to: base)).to eq("in 1 minute")
         end
       end
 
@@ -132,8 +132,8 @@ RSpec.describe Humane::TimeFormatter do
       context "59 minutes ago" do
         let(:when_time) { base - (59 * 60) }
 
-        it "stays exact below the hour" do
-          expect(formatter.string(at: when_time, relative_to: base)).to eq("59 minutes ago")
+        it "prefixes about (59 minutes falls in the 45..89-minute 'about 1 hour' bucket)" do
+          expect(formatter.string(at: when_time, relative_to: base)).to eq("about 1 hour ago")
         end
       end
 
@@ -156,8 +156,8 @@ RSpec.describe Humane::TimeFormatter do
       context "30 hours ago" do
         let(:when_time) { base - (30 * 3600) }
 
-        it "prefixes about on the rolled-up day bucket" do
-          expect(formatter.string(at: when_time, relative_to: base)).to eq("about 1 day ago")
+        it "does not prefix about on the day bucket (ActionView's table has no 'about 1 day')" do
+          expect(formatter.string(at: when_time, relative_to: base)).to eq("1 day ago")
         end
       end
 
@@ -174,6 +174,55 @@ RSpec.describe Humane::TimeFormatter do
 
         it "prefixes in about" do
           expect(formatter.string(at: when_time, relative_to: base)).to eq("in about 3 hours")
+        end
+      end
+    end
+
+    # Boundary regression coverage for the ActionView `distance_of_time_in_words` bucket
+    # table this approximate-distance behavior ports, truncated at the "1 day" row since
+    # month/year buckets are out of scope. Each pair straddles a cutoff second from that
+    # table to lock in exactly where the wording flips.
+    context "at the approximate-distance bucket table boundaries" do
+      context "without approximate" do
+        subject(:formatter) { described_class.new }
+
+        it "29s stays less than a minute, 30s rounds up to 1 minute" do
+          expect(formatter.string(at: base - 29, relative_to: base)).to eq("less than a minute ago")
+          expect(formatter.string(at: base - 30, relative_to: base)).to eq("1 minute ago")
+        end
+
+        it "89s stays 1 minute, 90s rounds up to 2 minutes" do
+          expect(formatter.string(at: base - 89, relative_to: base)).to eq("1 minute ago")
+          expect(formatter.string(at: base - 90, relative_to: base)).to eq("2 minutes ago")
+        end
+
+        it "44:29 stays 44 minutes, 44:30 rounds up to 1 hour" do
+          expect(formatter.string(at: base - (44 * 60 + 29), relative_to: base)).to eq("44 minutes ago")
+          expect(formatter.string(at: base - (44 * 60 + 30), relative_to: base)).to eq("1 hour ago")
+        end
+
+        it "89:29 stays 1 hour, 89:30 rounds up to 2 hours" do
+          expect(formatter.string(at: base - (89 * 60 + 29), relative_to: base)).to eq("1 hour ago")
+          expect(formatter.string(at: base - (89 * 60 + 30), relative_to: base)).to eq("2 hours ago")
+        end
+
+        it "23:59:29 stays 24 hours, 23:59:30 rounds up to 1 day" do
+          expect(formatter.string(at: base - (23 * 3600 + 59 * 60 + 29), relative_to: base)).to eq("24 hours ago")
+          expect(formatter.string(at: base - (23 * 3600 + 59 * 60 + 30), relative_to: base)).to eq("1 day ago")
+        end
+      end
+
+      context "with approximate: true" do
+        subject(:formatter) { described_class.new(approximate: true) }
+
+        it "44:29 has no about, 44:30 gains about (entering the hour bucket)" do
+          expect(formatter.string(at: base - (44 * 60 + 29), relative_to: base)).to eq("44 minutes ago")
+          expect(formatter.string(at: base - (44 * 60 + 30), relative_to: base)).to eq("about 1 hour ago")
+        end
+
+        it "23:59:29 keeps about, 23:59:30 drops about (entering the day bucket)" do
+          expect(formatter.string(at: base - (23 * 3600 + 59 * 60 + 29), relative_to: base)).to eq("about 24 hours ago")
+          expect(formatter.string(at: base - (23 * 3600 + 59 * 60 + 30), relative_to: base)).to eq("1 day ago")
         end
       end
     end
