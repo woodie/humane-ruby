@@ -219,20 +219,62 @@ match with positional args), then for real via `bundle exec rspec` on
 woodie's Mac -- 40/40 passing. Tagged, pushed, and **published to
 RubyGems.org as `humane` `0.6.0`**.
 
+## `v0.9.0`: a full API rethink, informed by three real consumers
+
+Through `v0.6.0` this gem was built as a Ruby port of `ByteCountFormatter`/
+`RelativeDateTimeFormatter` -- configurable formatter classes mirroring
+Foundation's own API shape. With three real consumers now shipped
+(`lambada`, `scandalous`, `zouk`) and this gem the sole user of its own API
+(woodie), the goal shifted: feel as simple to drop into a Ruby HTML
+template as ActionView's own helpers, while staying consistent with
+`humane` (Go) and `humane-swift`. Breaking changes throughout -- see
+`humane`'s own `docs/COWORK.md` `v0.9.0` entry for the full cross-repo
+rationale, summarized here:
+
+- **`SizeFormatter.new.string(...)`/`TimeFormatter.new.string(...)` ->
+  `SizeFormatter.human_size(...)`/`TimeFormatter.time_ago(...)`**, class
+  methods, no instantiation -- once configuration lived at the call site
+  instead of the constructor, `.new` held no state and was ceremony left
+  over from mirroring Foundation. `humane` (Go) and `humane-swift` picked
+  up the equivalent change in the same session, each using its own
+  idiomatic casing (`HumanSize`/`TimeAgo` in Go, `humanSize`/`timeAgo` in
+  Swift) rather than one literal spelling shared across all three.
+- **`human_size`'s rounding corrected toward 3 significant figures** --
+  see `docs/COMMENTS.md` for the derivation. Fixes `5,240,000,000` ->
+  `"5.24 GB"` (previously `"5.2 GB"`), and bakes in `humane-swift`'s
+  other real-hardware findings (`"Zero KB"` for zero, spelled-out
+  `"bytes"` below 1000).
+- **`time_ago`'s `approximate:` default flips `false` -> `true`** --
+  matches ActionView's own always-on-past-the-hour behavior, and matches
+  what `scandalous`'s `web.rb` already passed explicitly. `include_seconds:`
+  stays `false`, unchanged.
+- **`time_ago` accepts `at: nil`** plus a new `when_nil:` keyword, returned
+  as-is when `at` is `nil` -- lets a caller collapse a guard-then-fallback
+  dance into one call. Motivated by `zouk`'s Swift `ScanEntry.timeAgo`,
+  which has exactly this shape today (see `humane`'s own
+  `docs/COMMENTS.md` for the full history).
+
+Written by inspection -- `bundle`/`rspec` still aren't installed in this
+sandbox (see "Sandbox limitation" above), though `ruby -Ilib` smoke-testing
+is available. Needs a real `bundle exec rspec` pass on woodie's Mac, same
+as every prior change here. `standardrb` added as a dev dependency this
+session (see Gemfile) to match `scandalous`'s own lint setup -- not yet run
+for real either.
+
 ## Next up
 
-1. `v0.6.0` is pushed and published. Close `humane-ruby` issue #1, pointing
-   to the `v0.5.0` table match. `scandalous`/`lambada` don't need a
-   follow-up pass for `v0.5.0`'s change -- their documented `approximate`
-   usage is hour-scale, unaffected -- and don't need one for `v0.6.0`
-   either, since it's purely additive.
-2. `Humane::SizeFormatter` has no `allowed_units`/`count_style` (Finder's style is
-   the only one anything downstream needs today), and `Humane::TimeFormatter` has no
-   `:named` style (`"yesterday"`, calendar-boundary-aware) -- both left out
-   deliberately per "Design decisions" above, not gaps to fill without a real need.
-3. `humane-swift`'s real-hardware testing found `ByteCountFormatter`'s actual output
-   diverges from this gem's hand-rolled 2-significant-digit math in a few cases
-   (zero bytes, byte-scale labels, some GB-scale precision) -- see
-   `humane-swift/docs/COWORK.md` "Current state" for specifics. Worth deciding
-   whether to correct `Humane::SizeFormatter` toward exact parity or document the gap
-   as accepted.
+1. `human_size`'s 3-significant-figure rounding rule reproduces every known
+   fixture (including both cases previously cross-checked against real
+   hardware) but is still an inference from a small fixture set -- worth a
+   real `ByteCountFormatter` comparison across a wider range of magnitudes
+   before treating it as confirmed the way the two original fixtures were.
+2. `Humane::SizeFormatter` has no alternate unit/style options, and
+   `Humane::TimeFormatter` has no `:named` style (`"yesterday"`,
+   calendar-boundary-aware) -- both left out deliberately, not gaps to
+   fill without a real need.
+3. `humane-ruby` issue #1 quotes ActionView's full `distance_of_time_in_words`
+   table; ported only through the "1 day" row. The 2..29-day and month/year
+   buckets past that are out of scope by design (see README "Scope") -- not
+   a gap to fill without a real downstream need.
+4. `scandalous` needs a follow-up pass to adopt this API -- see its own
+   `docs/COWORK.md` once that happens.

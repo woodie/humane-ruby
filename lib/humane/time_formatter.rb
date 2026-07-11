@@ -1,59 +1,58 @@
 # frozen_string_literal: true
 
 module Humane
-  # Formats one time relative to another the way Finder-adjacent tools do.
+  # Formats one time relative to another the way ActionView's
+  # distance_of_time_in_words does for wording, but direction-aware like
+  # RelativeDateTimeFormatter -- "X ago"/"in X", chosen automatically rather
+  # than requiring the caller to know which applies ahead of time. See
+  # docs/COMMENTS.md.
   class TimeFormatter
-    # include_seconds shows exact seconds under a minute instead of collapsing to "less than a minute ago/in less than a minute". Defaults to false, matching ActionView's include_seconds.
-    # approximate prefixes "about"/"in about" on the hour-scale buckets (1 hour, and 2..24 hours), matching ActionView's distance_of_time_in_words wording for those buckets. Defaults to false. See docs/COMMENTS.md and humane-ruby issue #1 for the full bucket table this ports.
-    def initialize(include_seconds: false, approximate: false)
-      @include_seconds = include_seconds
-      @approximate = approximate
-    end
+    class << self
+      # Returns at relative to relative_to as a human-readable string. If at
+      # is nil, returns when_nil without formatting -- see docs/COMMENTS.md.
+      #
+      #   Humane::TimeFormatter.time_ago(Time.now - 180, Time.now) #=> "3 minutes ago"
+      def time_ago(at, relative_to, approximate: true, include_seconds: false, when_nil: nil)
+        return when_nil if at.nil?
 
-    # Returns at relative to relative_to; accepts positional or at:/relative_to: keyword arguments -- see docs/COMMENTS.md.
-    def string(positional_at = nil, positional_relative_to = nil, at: nil, relative_to: nil)
-      at ||= positional_at
-      relative_to ||= positional_relative_to
-      raise ArgumentError, "at is required" unless at
-      raise ArgumentError, "relative_to is required" unless relative_to
+        seconds = relative_to - at
+        future = seconds.negative?
+        seconds = seconds.abs
 
-      seconds = relative_to - at
-      future = seconds.negative?
-      seconds = seconds.abs
-
-      if !@include_seconds && seconds < 30
-        return future ? "in less than a minute" : "less than a minute ago"
-      end
-
-      if @include_seconds && seconds < 60
-        return wrap(pluralize(seconds.to_i, "second"), future: future)
-      end
-
-      # Buckets come from distance_in_minutes, not raw seconds re-divided per unit -- see docs/COMMENTS.md.
-      distance_in_minutes = (seconds / 60.0).round
-
-      text, approximable =
-        case distance_in_minutes
-        when 1 then ["1 minute", false]
-        when 2..44 then [pluralize(distance_in_minutes, "minute"), false]
-        when 45..89 then ["1 hour", true]
-        when 90..1439 then [pluralize((distance_in_minutes / 60.0).round, "hour"), true]
-        when 1440..2519 then ["1 day", false]
-        else [pluralize((distance_in_minutes / 1440.0).round, "day"), false]
+        if !include_seconds && seconds < 30
+          return future ? "in less than a minute" : "less than a minute ago"
         end
 
-      text = "about #{text}" if @approximate && approximable
-      wrap(text, future: future)
-    end
+        if include_seconds && seconds < 60
+          return wrap(pluralize(seconds.to_i, "second"), future: future)
+        end
 
-    private
+        # Buckets come from distance_in_minutes, not raw seconds re-divided per unit -- see docs/COMMENTS.md.
+        distance_in_minutes = (seconds / 60.0).round
 
-    def wrap(text, future:)
-      future ? "in #{text}" : "#{text} ago"
-    end
+        text, approximable =
+          case distance_in_minutes
+          when 1 then ["1 minute", false]
+          when 2..44 then [pluralize(distance_in_minutes, "minute"), false]
+          when 45..89 then ["1 hour", true]
+          when 90..1439 then [pluralize((distance_in_minutes / 60.0).round, "hour"), true]
+          when 1440..2519 then ["1 day", false]
+          else [pluralize((distance_in_minutes / 1440.0).round, "day"), false]
+          end
 
-    def pluralize(count, unit)
-      count == 1 ? "1 #{unit}" : "#{count} #{unit}s"
+        text = "about #{text}" if approximate && approximable
+        wrap(text, future: future)
+      end
+
+      private
+
+      def wrap(text, future:)
+        future ? "in #{text}" : "#{text} ago"
+      end
+
+      def pluralize(count, unit)
+        (count == 1) ? "1 #{unit}" : "#{count} #{unit}s"
+      end
     end
   end
 end

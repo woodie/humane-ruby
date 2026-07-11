@@ -3,83 +3,64 @@
 require "spec_helper"
 
 RSpec.describe Humane::SizeFormatter do
-  subject(:formatter) { described_class.new }
-
-  describe "#string" do
-    context "called positionally" do
-      it "matches the keyword-argument call, same output" do
-        expect(formatter.string(225_935)).to eq(formatter.string(from_byte_count: 225_935))
-        expect(formatter.string(225_935)).to eq("226 KB")
-      end
-    end
-
-    context "with no argument" do
-      it "raises" do
-        expect { formatter.string }.to raise_error(ArgumentError, "from_byte_count is required")
-      end
-    end
-
+  describe ".human_size" do
     context "with 0 bytes" do
-      let(:byte_count) { 0 }
+      it "formats as Zero KB, matching ByteCountFormatter's own wording" do
+        expect(described_class.human_size(0)).to eq("Zero KB")
+      end
+    end
 
-      it "formats as 0 B" do
-        expect(formatter.string(from_byte_count: byte_count)).to eq("0 B")
+    context "with 1 byte" do
+      it "spells out the singular unit" do
+        expect(described_class.human_size(1)).to eq("1 byte")
       end
     end
 
     context "with a small byte count" do
-      let(:byte_count) { 7 }
-
-      it "formats with no rounding" do
-        expect(formatter.string(from_byte_count: byte_count)).to eq("7 B")
+      it "spells out bytes rather than using a B label" do
+        expect(described_class.human_size(7)).to eq("7 bytes")
       end
     end
 
     context "with 999 bytes" do
-      let(:byte_count) { 999 }
-
       it "stays in bytes, just under the 1 KB threshold" do
-        expect(formatter.string(from_byte_count: byte_count)).to eq("999 B")
+        expect(described_class.human_size(999)).to eq("999 bytes")
       end
     end
 
     context "with the shared 79992-byte fixture used by lambada/scandalous" do
-      let(:byte_count) { 79_992 }
-
       it "formats as 80 KB" do
-        expect(formatter.string(from_byte_count: byte_count)).to eq("80 KB")
+        expect(described_class.human_size(79_992)).to eq("80 KB")
       end
     end
 
     context "with a real file's byte count" do
-      let(:byte_count) { 225_935 }
-
       it "matches Finder's reported size" do
-        expect(formatter.string(from_byte_count: byte_count)).to eq("226 KB")
+        expect(described_class.human_size(225_935)).to eq("226 KB")
       end
     end
 
     context "with zouk's ByteCountFormatter(.file) fixture" do
-      let(:byte_count) { 500_000 }
-
       it "matches its output" do
-        expect(formatter.string(from_byte_count: byte_count)).to eq("500 KB")
+        expect(described_class.human_size(500_000)).to eq("500 KB")
       end
     end
 
     context "with a single-digit megabyte value" do
-      let(:byte_count) { 1_500_000 }
-
-      it "shows one decimal place" do
-        expect(formatter.string(from_byte_count: byte_count)).to eq("1.5 MB")
+      it "shows one decimal place, trailing zero trimmed" do
+        expect(described_class.human_size(1_500_000)).to eq("1.5 MB")
       end
     end
 
     context "with a gigabyte-scale value" do
-      let(:byte_count) { 5_240_000_000 }
+      it "keeps 2 decimal places at 3 significant figures (not truncated to 1)" do
+        expect(described_class.human_size(5_240_000_000)).to eq("5.24 GB")
+      end
+    end
 
-      it "rounds to 2 significant digits" do
-        expect(formatter.string(from_byte_count: byte_count)).to eq("5.2 GB")
+    context "with a value that lands on an exact unit" do
+      it "trims both trailing decimal digits" do
+        expect(described_class.human_size(2_000_000)).to eq("2 MB")
       end
     end
   end

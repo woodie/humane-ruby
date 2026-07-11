@@ -9,104 +9,119 @@ have been a multi-line comment lives here instead.
 ## lib/humane/size_formatter.rb
 
 ### `Humane::SizeFormatter` (class)
-Formats byte counts the way Finder does: 1000-based math, capitalized
-unit labels, rounded to 2 significant digits. Not the SI-correct
-lowercase "kB" (that's what number_to_human_size's siblings in other
-languages get wrong the other way), and not 1024-based math under a
-"KB" label (that's what Rails' number_to_human_size gets wrong).
+Formats byte counts the way Finder does, as a class method
+(`.human_size`) rather than an instantiated formatter. Through `v0.6.0`
+this mirrored `ByteCountFormatter`'s own shape (`SizeFormatter.new.string`)
+on purpose. `v0.9.0` drops that -- once there was no per-instance
+configuration to hold, `.new` was ceremony left over from mirroring
+Foundation rather than something this design still needs. See
+`docs/COWORK.md`'s `v0.9.0` entry.
 
-### `Humane::SizeFormatter#string`
-Accepts positional (`string(225_935)`) or keyword (`string(from_byte_count:)`)
-arguments, the same optional-positional-param-plus-`||=` shape as
-`TimeFormatter#string` (see that section below) -- added in the same pass, for
-the same reason: matching `humane` (Go)'s positional-only calling convention.
+### `Humane::SizeFormatter.human_size`
+Bakes in three corrections found by comparing this gem's original
+2-significant-digit port against real `ByteCountFormatter` output (via
+`humane-swift`'s real-hardware testing -- see that repo's
+`docs/COWORK.md`, "Current state"):
 
-Returns from_byte_count as a Finder-style human-readable string.
+- `0` reads `"Zero KB"`, not `"0 B"` -- a hardcoded special case;
+  `ByteCountFormatter` doesn't run its usual rounding logic for zero.
+- Values under 1000 spell out `"byte"`/`"bytes"` (`"1 byte"`, `"7 bytes"`)
+  rather than using a `"B"` label.
+- Everything else rounds to 3 significant figures (not 2) via
+  `format_significant`, then gets unit-labeled. The old rule (1 decimal
+  below 10, none at or above) undercounted precision under 10:
+  `5,240,000,000` bytes is `"5.24 GB"` on real hardware, not `"5.2 GB"`.
 
-    string(from_byte_count: 79_992)    == "80 KB"
-    string(from_byte_count: 225_935)   == "226 KB"
-    string(from_byte_count: 1_500_000) == "1.5 MB"
+The 3-significant-figure rule was chosen over a narrower "just fix the GB
+case" patch because it's the only single rule found that reproduces every
+known fixture at once -- including the two cross-checked against real
+hardware before this change (`225_935` -> `"226 KB"`, `500_000` ->
+`"500 KB"`) and the existing `1_500_000` -> `"1.5 MB"` fixture, alongside
+the new GB finding. Still an inference from a small fixture set, not
+confirmed across every magnitude -- see `docs/COWORK.md`'s `v0.9.0` entry
+for what still needs a real `ByteCountFormatter` comparison.
+
+    human_size(0)          == "Zero KB"
+    human_size(1)          == "1 byte"
+    human_size(79_992)     == "80 KB"
+    human_size(225_935)    == "226 KB"
+    human_size(1_500_000)  == "1.5 MB"
+    human_size(5_240_000_000) == "5.24 GB"
+
+### `Humane::SizeFormatter.format_significant`
+Rounds `value` to `sig_figs` significant figures, then trims trailing
+fractional zeros (and the decimal point itself, if nothing remains after
+it) -- keeps `"1.5 MB"` from becoming `"1.50 MB"` while still letting
+`"5.24 GB"` keep both of its non-zero decimal digits. `magnitude` (digits
+before the decimal point) uses `Math.log10(value).floor + 1` rather than
+`.ceil` specifically to avoid a boundary bug at exact powers of 10.
 
 ## lib/humane/time_formatter.rb
 
 ### `Humane::TimeFormatter` (class)
-Formats one time relative to another the way RelativeDateTimeFormatter
-does: asymmetric "X ago" / "in X" phrasing, no "about" prefix on the hour
-bucket by default. An earlier version used symmetric "X ago" / "X from
-now" wording, billed as a "deliberate departure" -- but that departure
-wasn't earning its keep against this library's actual goal (match what
-RelativeDateTimeFormatter, the API this is modeled on, actually outputs),
-so it was reverted. `approximate: true` (v0.4.0, see below) opts into
-the "about" prefix for contexts that can't earn back the precision --
-still off by default, since matching Foundation's raw output is the
-baseline this library is held to.
+Formats one time relative to another the way ActionView's
+`distance_of_time_in_words` does for wording, but direction-aware like
+`RelativeDateTimeFormatter` -- `"X ago"`/`"in X"`, chosen automatically
+from the sign of `relative_to - at` rather than requiring the caller to
+know which applies ahead of time (which is what ActionView itself
+requires, and whose own `.abs` collapses future distances into a
+past-tense string as a known, unfixed bug -- see this repo's original
+`docs/COWORK.md` "Why this exists" section).
 
-### `Humane::TimeFormatter#initialize`
-include_seconds: false (the default) renders any duration under 30
-seconds as "less than a minute ago"/"in less than a minute" instead of
-counting seconds -- matching the first row of ActionView's
-distance_of_time_in_words bucket table (see #string below), not an
-arbitrary round number. The future phrasing follows the same asymmetric
-"in X" pattern as the counted buckets below. Named and defaulted after
-ActionView's own include_seconds (v0.3.0, renamed from
-collapse_minute: true -- an exact polarity inversion, so the default
-behavior is unchanged; see docs/releases/v0.3.0.md).
+Now a class method (`.time_ago`), not an instantiated formatter --
+`v0.6.0` and earlier mirrored `RelativeDateTimeFormatter`'s shape
+(`TimeFormatter.new(approximate: true).string(...)`) on purpose; `v0.9.0`
+drops that in favor of ActionView's own bare-helper-method shape
+(`distance_of_time_in_words`), since the actual goal is dropping into a
+Rails-style view as simply as ActionView does. Configuration moves from
+constructor keyword arguments to call-site keyword arguments -- Ruby's
+native kwargs make this a plain rename, not a redesign of the mechanism
+(unlike Go, which needed a new `TimeOptions` type; see `humane`'s own
+`docs/COMMENTS.md`).
 
-approximate: false (the default) prefixes "about"/"in about" onto the
-hour-scale buckets (1 hour, and 2..24 hours) when true, matching
-ActionView's distance_of_time_in_words wording for those exact buckets
--- for a static render (a web response, a cached page) that can't
-live-refresh, exact-looking precision on a rounded value is misleading.
-Deliberately narrower than the "any bucket >= 1 hour" rule this had in
-v0.4.0: ActionView's own table has no "about" on the day bucket (or
-week/month/year buckets beyond this library's scope), so neither does
-this. Ported from humane-swift's identically-named option (v0.1.0);
-this Ruby port is simpler than Swift's, since `text` is built bare here
-(no "ago"/"in " wrapping yet) -- prefixing "about " before that wrapping
-composes correctly for both directions with no string-surgery needed.
+### `approximate:` default flips `false` -> `true`
+Matches ActionView's own `distance_of_time_in_words` (which has no toggle
+for this at all -- always on past the hour boundary), and, checked
+against real code, matches what every current consumer already passed
+explicitly (`scandalous`'s `web.rb` sets `approximate: true`
+unconditionally). Zero behavior change for the one real Ruby consumer;
+removes required boilerplate at the call site instead. `include_seconds:`
+stays `false` by default, unchanged. Ruby's keyword-argument defaults
+don't have Go's zero-value struct problem here -- each keyword argument
+gets its own literal default in the method signature, so there's no
+single "zero value" that has to serve every field at once.
 
-### `Humane::TimeFormatter#string`
-Accepts positional (`string(when, base)`) or keyword (`string(at:, relative_to:)`)
-arguments -- added once the family's API got a fresh look and it became clear Go's
-`Format(at, relativeTo)` (positional-only; Go has no argument labels at all) didn't
-have a Ruby equivalent for callers who'd rather not spell out keywords. Implemented
-as two optional positional params defaulting to `nil`, merged with the keyword params
-via `||=`, with explicit `ArgumentError`s replacing the `missing keyword` error Ruby's
-built-in keyword-arg enforcement used to raise for free. `humane-swift` picked up the
-equivalent `string(_:_:)` overload in the same pass -- see its own `docs/COMMENTS.md`.
+### `when_nil:`
+Added in `v0.9.0` alongside `time_ago` accepting a `nil` `at`. Motivated
+by `zouk`'s Swift `ScanEntry.timeAgo(relativeTo:)`, which used to guard a
+possibly-unparsable timestamp itself and hand the caller a value that
+still needed its own fallback one layer up -- two guard points for one
+final string. `time_ago` now takes `nil` directly and a caller-supplied
+`when_nil:` fallback, collapsing both layers into one call. The fallback
+value stays app-specific (`nil` by default, not a hardcoded "unknown
+time" baked into this gem) -- consistent with keeping ActionView-flavored
+vocabulary opt-in rather than assumed, the same principle
+`approximate`/`include_seconds` already follow.
 
-Swift's localizedString(for:relativeTo:) uses "for:" as its first
-argument label; Ruby's "for" is a reserved word, and while
-`def string(for:, ...)` parses, reading the bound value back out inside
-the method needs `binding.local_variable_get(:for)` since a bare `for`
-triggers the keyword parser -- not worth it for a label match. "at:"
-reads just as naturally: "the string for the time AT this moment,
-RELATIVE TO that one".
+### `Humane::TimeFormatter.time_ago`
+Buckets are chosen from `distance_in_minutes` (seconds/60, rounded once
+via Ruby's round-half-up `Float#round`), not by re-dividing raw seconds
+independently per unit. The old per-unit approach let rounding carry
+across a bucket boundary on its own -- 59:59:59 (< 3600s, so the old code
+took the minutes branch) rounded to "60 minutes ago" instead of "1 hour
+ago". Computing `distance_in_minutes` once and branching on *that* is
+exactly how ActionView's own `distance_of_time_in_words` works, and is
+what produces its specific, non-obvious cutoffs: the "about 1 hour"
+bucket starts at 44 minutes 30 seconds (not 60:00), and "about 2 hours"
+starts at 89:30, not 90:00 -- see humane-ruby issue #1
+(https://github.com/woodie/humane-ruby/issues/1) for the full table this
+ports, truncated here at the "1 day" row (week/month/year buckets are
+out of scope -- see "Scope" in the README).
 
-Buckets are chosen from `distance_in_minutes` (seconds/60, rounded
-once via Ruby's round-half-up `Float#round`), not by re-dividing raw
-seconds independently per unit. The old per-unit approach let rounding
-carry across a bucket boundary on its own -- 59:59:59 (< 3600s, so the
-old code took the minutes branch) rounded to "60 minutes ago" instead
-of "1 hour ago". Computing distance_in_minutes once and branching on
-*that* is exactly how ActionView's own distance_of_time_in_words works,
-and is what produces its specific, non-obvious cutoffs: the "about 1
-hour" bucket starts at 44 minutes 30 seconds (not 60:00), and "about 2
-hours" starts at 89:30, not 90:00 -- see humane-ruby issue #1
-(https://github.com/woodie/humane-ruby/issues/1) for the full table
-this ports, truncated here at the "1 day" row (week/month/year buckets
-are out of scope -- see "Design decisions" in docs/COWORK.md).
-
-    string(at: t, relative_to: t)                    == "less than a minute ago"
-    string(at: t - 45, relative_to: t)                == "1 minute ago"
-    string(at: t - 180, relative_to: t)               == "3 minutes ago"
-    string(at: t + 180, relative_to: t)               == "in 3 minutes"
-    string(at: t - (44 * 60 + 29), relative_to: t)    == "44 minutes ago"
-    string(at: t - (44 * 60 + 30), relative_to: t)    == "1 hour ago"
-    string(at: t - 15 * 3600, relative_to: t)         == "15 hours ago"
-    string(at: t - 30 * 3600, relative_to: t)         == "1 day ago"
-
-    approx = Humane::TimeFormatter.new(approximate: true)
-    approx.string(at: t - (44 * 60 + 30), relative_to: t) == "about 1 hour ago"
-    approx.string(at: t - 15 * 3600, relative_to: t)      == "about 15 hours ago"
-    approx.string(at: t - 30 * 3600, relative_to: t)      == "1 day ago"  # no "about" -- ActionView's table has none on the day bucket
+    time_ago(t, t)                        == "less than a minute ago"
+    time_ago(t - 45, t)                   == "1 minute ago"
+    time_ago(t - 180, t)                  == "3 minutes ago"
+    time_ago(t + 180, t)                  == "in 3 minutes"
+    time_ago(t - 15 * 3600, t)            == "about 15 hours ago"
+    time_ago(t - 30 * 3600, t)            == "1 day ago" # no "about" -- ActionView's table has none on the day bucket
+    time_ago(nil, t, when_nil: "an unknown time") == "an unknown time"
