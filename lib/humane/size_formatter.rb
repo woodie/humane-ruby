@@ -5,8 +5,11 @@ module Humane
   class SizeFormatter
     UNITS = %w[B KB MB GB TB PB EB].freeze
 
-    # Returns from_byte_count as a Finder-style human-readable string.
-    def string(from_byte_count:)
+    # Returns from_byte_count as a Finder-style human-readable string; accepts positional or from_byte_count: keyword argument -- see docs/COMMENTS.md.
+    def string(positional_from_byte_count = nil, from_byte_count: nil)
+      from_byte_count ||= positional_from_byte_count
+      raise ArgumentError, "from_byte_count is required" unless from_byte_count
+
       return "#{from_byte_count} B" if from_byte_count < 1000
 
       exponent = [(Math.log(from_byte_count) / Math.log(1000)).to_i, UNITS.size - 1].min

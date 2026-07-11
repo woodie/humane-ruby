@@ -197,9 +197,12 @@ https://github.com/woodie/humane-ruby/releases/tag/v0.5.0.
 (`string(when, base)`) alongside the existing `string(at:, relative_to:)`
 keyword form -- matches `humane` (Go), which is positional-only since Go has
 no argument labels at all. `humane-swift` picked up the equivalent
-`string(_:_:)` overload in the same pass. See `docs/COMMENTS.md`. Not yet
-version-bumped/tagged; this is a same-session, cross-repo API pass, not tied
-to a behavior change.
+`string(_:_:)` overload in the same pass. `Humane::SizeFormatter#string`
+picked up the identical treatment (`string(225_935)` alongside
+`string(from_byte_count:)`) once a mocked-up side-by-side comparison across
+all three languages surfaced it as still keyword-only while `TimeFormatter`
+wasn't. See `docs/COMMENTS.md`. Not yet version-bumped/tagged; this is a
+same-session, cross-repo API pass, not tied to a behavior change.
 
 `bundle`/`rspec` still aren't installed in this sandbox, but Ruby itself is
 (`3.0.2p107`) -- confirmed for real via `ruby -Ilib`, not just by inspection:

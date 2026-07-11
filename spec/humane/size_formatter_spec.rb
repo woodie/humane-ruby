@@ -6,6 +6,19 @@ RSpec.describe Humane::SizeFormatter do
   subject(:formatter) { described_class.new }
 
   describe "#string" do
+    context "called positionally" do
+      it "matches the keyword-argument call, same output" do
+        expect(formatter.string(225_935)).to eq(formatter.string(from_byte_count: 225_935))
+        expect(formatter.string(225_935)).to eq("226 KB")
+      end
+    end
+
+    context "with no argument" do
+      it "raises" do
+        expect { formatter.string }.to raise_error(ArgumentError, "from_byte_count is required")
+      end
+    end
+
     context "with 0 bytes" do
       let(:byte_count) { 0 }
 

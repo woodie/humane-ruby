@@ -16,6 +16,11 @@ languages get wrong the other way), and not 1024-based math under a
 "KB" label (that's what Rails' number_to_human_size gets wrong).
 
 ### `Humane::SizeFormatter#string`
+Accepts positional (`string(225_935)`) or keyword (`string(from_byte_count:)`)
+arguments, the same optional-positional-param-plus-`||=` shape as
+`TimeFormatter#string` (see that section below) -- added in the same pass, for
+the same reason: matching `humane` (Go)'s positional-only calling convention.
+
 Returns from_byte_count as a Finder-style human-readable string.
 
     string(from_byte_count: 79_992)    == "80 KB"

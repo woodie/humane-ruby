@@ -22,6 +22,14 @@ time_formatter = Humane::TimeFormatter.new
 time_formatter.string(at: Time.now - 180, relative_to: Time.now) # "3 minutes ago"
 ```
 
+Both methods also accept positional arguments, matching `humane` (Go)'s
+positional-only calling convention:
+
+```ruby
+Humane::SizeFormatter.new.string(225_935) # "226 KB"
+time_formatter.string(Time.now - 180, Time.now) # "3 minutes ago"
+```
+
 Corresponding functions in Swift will have consistent output.
 
 ```swift
@@ -37,11 +45,6 @@ If you're writing Swift directly rather than calling Foundation by hand,
 [`humane-swift`](https://github.com/woodie/humane-swift) wraps these same two
 formatters with the identical API shape -- including the
 `includeSeconds`/`approximate` options below.
-
-`TimeFormatter#string` also accepts positional arguments --
-`time_formatter.string(Time.now - 180, Time.now)` works the same as the
-keyword form above, matching `humane` (Go)'s positional-only calling
-convention.
 
 ## Install
 
