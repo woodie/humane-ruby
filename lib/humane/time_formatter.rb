@@ -10,8 +10,13 @@ module Humane
       @approximate = approximate
     end
 
-    # Returns the time at `at` relative to `relative_to` as a human-readable string.
-    def string(at:, relative_to:)
+    # Returns at relative to relative_to; accepts positional or at:/relative_to: keyword arguments -- see docs/COMMENTS.md.
+    def string(positional_at = nil, positional_relative_to = nil, at: nil, relative_to: nil)
+      at ||= positional_at
+      relative_to ||= positional_relative_to
+      raise ArgumentError, "at is required" unless at
+      raise ArgumentError, "relative_to is required" unless relative_to
+
       seconds = relative_to - at
       future = seconds.negative?
       seconds = seconds.abs

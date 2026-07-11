@@ -38,6 +38,11 @@ If you're writing Swift directly rather than calling Foundation by hand,
 formatters with the identical API shape -- including the
 `includeSeconds`/`approximate` options below.
 
+`TimeFormatter#string` also accepts positional arguments --
+`time_formatter.string(Time.now - 180, Time.now)` works the same as the
+keyword form above, matching `humane` (Go)'s positional-only calling
+convention.
+
 ## Install
 
 ```

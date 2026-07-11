@@ -6,6 +6,27 @@ RSpec.describe Humane::TimeFormatter do
   let(:base) { Time.new(2026, 7, 8, 12, 0, 0, "+00:00") }
 
   describe "#string" do
+    context "called positionally" do
+      subject(:formatter) { described_class.new }
+
+      it "matches the keyword-argument call, same output" do
+        expect(formatter.string(base - 180, base)).to eq(formatter.string(at: base - 180, relative_to: base))
+        expect(formatter.string(base - 180, base)).to eq("3 minutes ago")
+      end
+    end
+
+    context "with a required argument missing" do
+      subject(:formatter) { described_class.new }
+
+      it "raises when at is missing" do
+        expect { formatter.string(relative_to: base) }.to raise_error(ArgumentError, "at is required")
+      end
+
+      it "raises when relative_to is missing" do
+        expect { formatter.string(base) }.to raise_error(ArgumentError, "relative_to is required")
+      end
+    end
+
     context "with include_seconds: false (the default)" do
       subject(:formatter) { described_class.new }
 

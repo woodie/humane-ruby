@@ -61,6 +61,15 @@ this Ruby port is simpler than Swift's, since `text` is built bare here
 composes correctly for both directions with no string-surgery needed.
 
 ### `Humane::TimeFormatter#string`
+Accepts positional (`string(when, base)`) or keyword (`string(at:, relative_to:)`)
+arguments -- added once the family's API got a fresh look and it became clear Go's
+`Format(at, relativeTo)` (positional-only; Go has no argument labels at all) didn't
+have a Ruby equivalent for callers who'd rather not spell out keywords. Implemented
+as two optional positional params defaulting to `nil`, merged with the keyword params
+via `||=`, with explicit `ArgumentError`s replacing the `missing keyword` error Ruby's
+built-in keyword-arg enforcement used to raise for free. `humane-swift` picked up the
+equivalent `string(_:_:)` overload in the same pass -- see its own `docs/COMMENTS.md`.
+
 Swift's localizedString(for:relativeTo:) uses "for:" as its first
 argument label; Ruby's "for" is a reserved word, and while
 `def string(for:, ...)` parses, reading the bound value back out inside

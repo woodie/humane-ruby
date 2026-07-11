@@ -171,7 +171,7 @@ Also this session: README's Swift code sample (raw `ByteCountFormatter`/
 that's a real, published sibling library now rather than just "the Foundation
 this gem is modeled on."
 
-`v0.5.0` (unreleased): `#string` reworked to match the ActionView
+`v0.5.0`: `#string` reworked to match the ActionView
 `distance_of_time_in_words` bucket table quoted in issue #1 exactly, through the
 "1 day" row (week/month/year buckets stay out of scope -- narrower than a "full
 featured" port, matching what the scan-server/retriever projects actually need).
@@ -188,7 +188,27 @@ cutoffs from the table for both directions. Confirmed for real via `bundle exec
 rspec` on woodie's Mac -- 35/35 passing. `humane` and `humane-swift` picked up
 the identical table change in the same session -- see their own `docs/COWORK.md`.
 Issue #1 can now be closed with a pointer to this table match, not just to
-`approximate` existing in the abstract.
+`approximate` existing in the abstract. Tagged and released:
+https://github.com/woodie/humane-ruby/releases/tag/v0.5.0.
+
+## API naming pass (unreleased)
+
+`Humane::TimeFormatter#string` now also accepts positional arguments
+(`string(when, base)`) alongside the existing `string(at:, relative_to:)`
+keyword form -- matches `humane` (Go), which is positional-only since Go has
+no argument labels at all. `humane-swift` picked up the equivalent
+`string(_:_:)` overload in the same pass. See `docs/COMMENTS.md`. Not yet
+version-bumped/tagged; this is a same-session, cross-repo API pass, not tied
+to a behavior change.
+
+`bundle`/`rspec` still aren't installed in this sandbox, but Ruby itself is
+(`3.0.2p107`) -- confirmed for real via `ruby -Ilib`, not just by inspection:
+positional and keyword calls return identical output, a mixed positional/
+keyword call works, missing either argument raises the expected
+`ArgumentError`, the full existing bucket-table (`less than a minute` through
+`1 day`) still matches with positional args, and `SizeFormatter` (untouched)
+is unaffected. A real `bundle exec rspec` run on woodie's Mac is still the
+bar for calling this done, matching every other change in this repo.
 
 ## Next up
 
