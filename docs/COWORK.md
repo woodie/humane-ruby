@@ -191,42 +191,43 @@ Issue #1 can now be closed with a pointer to this table match, not just to
 `approximate` existing in the abstract. Tagged and released:
 https://github.com/woodie/humane-ruby/releases/tag/v0.5.0.
 
-## API naming pass (unreleased)
+`v0.6.0`: `#string` on both `TimeFormatter` and `SizeFormatter` now also
+accepts positional arguments (`string(when, base)`, `string(225_935)`)
+alongside the existing keyword forms -- matches `humane` (Go), which is
+positional-only since Go has no argument labels at all. Implemented as
+optional positional parameters merged with the keyword parameters via
+`||=`, with explicit `ArgumentError`s standing in for Ruby's built-in
+missing-keyword check. `humane-swift` picked up the equivalent
+`string(_:_:)`/`string(_:)` overloads in the same session. `at` is also now
+documented as the one `TimeFormatter` parameter name every language in the
+family can actually share (Ruby was always forced into it -- `for` is a
+reserved word); `humane-swift` added `string(at:relativeTo:)` as an alias
+alongside its primary `for:` spelling. See `docs/COMMENTS.md` and
+`docs/releases/v0.6.0.md`.
 
-`Humane::TimeFormatter#string` now also accepts positional arguments
-(`string(when, base)`) alongside the existing `string(at:, relative_to:)`
-keyword form -- matches `humane` (Go), which is positional-only since Go has
-no argument labels at all. `humane-swift` picked up the equivalent
-`string(_:_:)` overload in the same pass. `Humane::SizeFormatter#string`
-picked up the identical treatment (`string(225_935)` alongside
-`string(from_byte_count:)`) once a mocked-up side-by-side comparison across
-all three languages surfaced it as still keyword-only while `TimeFormatter`
-wasn't. See `docs/COMMENTS.md`. Not yet version-bumped/tagged; this is a
-same-session, cross-repo API pass, not tied to a behavior change.
+This session also made explicit, in the README, the principle that's been
+guiding these decisions: Foundation is the baseline every default matches
+exactly, in all three languages; ActionView's vocabulary is a layer on top
+of that baseline, opt-in, never a replacement for it.
 
 `bundle`/`rspec` still aren't installed in this sandbox, but Ruby itself is
 (`3.0.2p107`) -- confirmed for real via `ruby -Ilib`, not just by inspection:
-positional and keyword calls return identical output, a mixed positional/
-keyword call works, missing either argument raises the expected
-`ArgumentError`, the full existing bucket-table (`less than a minute` through
-`1 day`) still matches with positional args, and `SizeFormatter` (untouched)
-is unaffected. A real `bundle exec rspec` run on woodie's Mac is still the
-bar for calling this done, matching every other change in this repo.
-
-The naming/positional-args pass above, keeping `for:` as Swift's primary
-spelling, and `include_seconds`/`approximate` defaulting `false` are all the
-same underlying call: Foundation is the baseline every default matches
-exactly in all three languages; ActionView's vocabulary is a layer on top of
-that baseline, opt-in, never a replacement for it. Made explicit in the
-README's "Beyond Foundation's defaults" section this session.
+positional and keyword calls return identical output on both formatters, a
+mixed positional/keyword call works, missing either argument raises the
+expected `ArgumentError`, and the full existing bucket/fixture tables still
+match with positional args. **Tagged locally as `v0.6.0`; not yet pushed or
+published to RubyGems** -- a real `bundle exec rspec` run plus the actual
+publish still need to happen on woodie's Mac, same as every other release
+here.
 
 ## Next up
 
-1. Tag and publish `v0.5.0` to RubyGems, then close `humane-ruby` issue #1
-   pointing to the table match above. `scandalous`/`lambada` don't need a
-   follow-up pass for this specific change -- their documented `approximate`
-   usage (`"about 14 hours ago"`-style, hour-scale) is unaffected; only day-scale
-   `approximate` output and sub-minute rounding below 90 seconds changed.
+1. Push `v0.6.0` and publish to RubyGems (`gem build humane.gemspec && gem
+   push humane-0.6.0.gem`), then close `humane-ruby` issue #1 pointing to the
+   `v0.5.0` table match. `scandalous`/`lambada` don't need a follow-up pass
+   for `v0.5.0`'s change -- their documented `approximate` usage is
+   hour-scale, unaffected -- and don't need one for `v0.6.0` either, since
+   it's purely additive.
 2. `Humane::SizeFormatter` has no `allowed_units`/`count_style` (Finder's style is
    the only one anything downstream needs today), and `Humane::TimeFormatter` has no
    `:named` style (`"yesterday"`, calendar-boundary-aware) -- both left out
