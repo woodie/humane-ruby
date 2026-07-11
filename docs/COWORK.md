@@ -211,23 +211,21 @@ exactly, in all three languages; ActionView's vocabulary is a layer on top
 of that baseline, opt-in, never a replacement for it.
 
 `bundle`/`rspec` still aren't installed in this sandbox, but Ruby itself is
-(`3.0.2p107`) -- confirmed for real via `ruby -Ilib`, not just by inspection:
-positional and keyword calls return identical output on both formatters, a
+(`3.0.2p107`) -- confirmed for real via `ruby -Ilib` in the sandbox first
+(positional and keyword calls return identical output on both formatters, a
 mixed positional/keyword call works, missing either argument raises the
-expected `ArgumentError`, and the full existing bucket/fixture tables still
-match with positional args. **Tagged locally as `v0.6.0`; not yet pushed or
-published to RubyGems** -- a real `bundle exec rspec` run plus the actual
-publish still need to happen on woodie's Mac, same as every other release
-here.
+expected `ArgumentError`, the full existing bucket/fixture tables still
+match with positional args), then for real via `bundle exec rspec` on
+woodie's Mac -- 40/40 passing. Tagged, pushed, and **published to
+RubyGems.org as `humane` `0.6.0`**.
 
 ## Next up
 
-1. Push `v0.6.0` and publish to RubyGems (`gem build humane.gemspec && gem
-   push humane-0.6.0.gem`), then close `humane-ruby` issue #1 pointing to the
-   `v0.5.0` table match. `scandalous`/`lambada` don't need a follow-up pass
-   for `v0.5.0`'s change -- their documented `approximate` usage is
-   hour-scale, unaffected -- and don't need one for `v0.6.0` either, since
-   it's purely additive.
+1. `v0.6.0` is pushed and published. Close `humane-ruby` issue #1, pointing
+   to the `v0.5.0` table match. `scandalous`/`lambada` don't need a
+   follow-up pass for `v0.5.0`'s change -- their documented `approximate`
+   usage is hour-scale, unaffected -- and don't need one for `v0.6.0`
+   either, since it's purely additive.
 2. `Humane::SizeFormatter` has no `allowed_units`/`count_style` (Finder's style is
    the only one anything downstream needs today), and `Humane::TimeFormatter` has no
    `:named` style (`"yesterday"`, calendar-boundary-aware) -- both left out
