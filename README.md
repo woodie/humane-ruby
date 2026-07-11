@@ -60,8 +60,11 @@ gem "humane"
 
 ## Beyond Foundation's defaults
 
-Two options on `Humane::TimeFormatter`, both off by default so it matches
-`RelativeDateTimeFormatter` exactly out of the box:
+Foundation is the baseline every default matches exactly, in all three
+languages -- these two options on `Humane::TimeFormatter` are how you layer
+ActionView's wording on top of it, not a replacement for it. Both off by
+default, so `Humane::TimeFormatter.new` and calling `RelativeDateTimeFormatter`
+directly always agree:
 
 - `include_seconds` (default `false`): under 30 seconds, collapses to "less than a
   minute ago"/"in less than a minute" instead of an exact second count. Named after

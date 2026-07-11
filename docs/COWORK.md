@@ -213,6 +213,13 @@ keyword call works, missing either argument raises the expected
 is unaffected. A real `bundle exec rspec` run on woodie's Mac is still the
 bar for calling this done, matching every other change in this repo.
 
+The naming/positional-args pass above, keeping `for:` as Swift's primary
+spelling, and `include_seconds`/`approximate` defaulting `false` are all the
+same underlying call: Foundation is the baseline every default matches
+exactly in all three languages; ActionView's vocabulary is a layer on top of
+that baseline, opt-in, never a replacement for it. Made explicit in the
+README's "Beyond Foundation's defaults" section this session.
+
 ## Next up
 
 1. Tag and publish `v0.5.0` to RubyGems, then close `humane-ruby` issue #1
