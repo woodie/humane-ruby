@@ -16,6 +16,8 @@ helpers, with output that's consistent with
 require "humane"
 
 Humane::SizeFormatter.human_size(225_935) # "226 KB"
+
+Humane::TimeFormatter.time_ago(Time.now, Time.now) # "less than a minute ago"
 Humane::TimeFormatter.time_ago(Time.now - 180, Time.now) # "3 minutes ago"
 ```
 
