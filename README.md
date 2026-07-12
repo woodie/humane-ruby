@@ -17,8 +17,9 @@ require "humane"
 
 Humane::SizeFormatter.human_size(225_935) # "226 KB"
 
-Humane::TimeFormatter.time_ago(Time.now, Time.now) # "less than a minute ago"
-Humane::TimeFormatter.time_ago(Time.now - 180, Time.now) # "3 minutes ago"
+now = Time.now; mtime = now - 180
+Humane::TimeFormatter.time_ago(now, now) # "less than a minute ago"
+Humane::TimeFormatter.time_ago(mtime, now) # "3 minutes ago"
 ```
 
 ## Install
