@@ -256,10 +256,17 @@ rationale, summarized here:
 
 Written by inspection -- `bundle`/`rspec` still aren't installed in this
 sandbox (see "Sandbox limitation" above), though `ruby -Ilib` smoke-testing
-is available. Needs a real `bundle exec rspec` pass on woodie's Mac, same
-as every prior change here. `standardrb` added as a dev dependency this
-session (see Gemfile) to match `scandalous`'s own lint setup -- not yet run
-for real either.
+is available and was used to confirm the new class methods before
+committing. Confirmed for real via `bundle exec rspec` on woodie's Mac --
+36/36 passing -- plus a green CI run on GitHub Actions (covering the
+`standardrb` dev dependency added this session). Tagged, pushed, and
+released: https://github.com/woodie/humane-ruby/releases/tag/v0.9.0,
+and published to RubyGems as `humane` `0.9.0`.
+
+All three real consumers have since adopted it: `lambada` `2.7.0`
+(deployed to the Pi, confirmed live), `scandalous` `2.7.0`, and `zouk`
+`v1.11.0` (Swift, adopted `humane-swift`'s equivalent `v0.9.0`) -- see each
+repo's own `docs/COWORK.md`.
 
 ## Next up
 
