@@ -15,11 +15,13 @@ helpers, with output that's consistent with
 ```ruby
 require "humane"
 
-Humane::SizeFormatter.human_size(225_935) # "226 KB"
+Humane.human_size(225_935) # "226 KB"
 
-now = Time.now; mtime = now - 180
-Humane::TimeFormatter.time_ago(now, now) # "less than a minute ago"
-Humane::TimeFormatter.time_ago(mtime, now) # "3 minutes ago"
+mtime = Time.now - 180
+Humane.time_ago(mtime) # "3 minutes ago" -- relative to the real clock
+
+now = Time.now
+Humane.distance_in_time(mtime, now) # "3 minutes ago" -- explicit relative_to, for tests
 ```
 
 ## Install
@@ -34,14 +36,24 @@ or in a `Gemfile`:
 gem "humane"
 ```
 
-## `time_ago` options
+## `distance_in_time` and `time_ago`
 
-`time_ago`'s recommended defaults already match ActionView's own
-`distance_of_time_in_words` defaults -- pass no keyword arguments at all and
-you get them for free:
+Two entry points, same naming split as ActionView's own
+`distance_of_time_in_words`/`time_ago_in_words`:
+
+- **`distance_in_time(at, relative_to, **opts)`** -- the explicit,
+  fully-tested core. Takes both times, so it's what specs should call.
+- **`time_ago(at, **opts)`** -- a one-argument convenience for the common
+  "drop into a view" case. Supplies `Time.now` as `relative_to` internally;
+  everything else is identical to `distance_in_time`.
+
+Both share the same keyword options and recommended defaults, already
+matching ActionView's own `distance_of_time_in_words` defaults -- pass none
+at all and you get them for free:
 
 ```ruby
-Humane::TimeFormatter.time_ago(at, relative_to) # approximate: true, include_seconds: false
+Humane.distance_in_time(at, relative_to) # approximate: true, include_seconds: false
+Humane.time_ago(at)                      # same defaults, relative_to is Time.now
 ```
 
 - **`approximate`** (default `true`): prefixes `"about"`/`"in about"` on the
@@ -51,13 +63,13 @@ Humane::TimeFormatter.time_ago(at, relative_to) # approximate: true, include_sec
 - **`include_seconds`** (default `false`): under 30 seconds, collapses to
   `"less than a minute ago"`/`"in less than a minute"` instead of an exact
   second count. Matches ActionView's `include_seconds` default.
-- **`when_nil`** (default `nil`): if `at` is `nil`, `time_ago` returns this
+- **`when_nil`** (default `nil`): if `at` is `nil`, both methods return this
   value without formatting -- for a scan, download, or other record that
   doesn't have a timestamp yet.
 
 ```ruby
-Humane::TimeFormatter.time_ago(t, now, approximate: false) # "15 hours ago", not "about 15 hours ago"
-Humane::TimeFormatter.time_ago(nil, now, when_nil: "an unknown time") # "an unknown time"
+Humane.distance_in_time(t, now, approximate: false) # "15 hours ago", not "about 15 hours ago"
+Humane.time_ago(nil, when_nil: "an unknown time") # "an unknown time"
 ```
 
 ## Scope

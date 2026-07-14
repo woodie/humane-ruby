@@ -268,6 +268,57 @@ All three real consumers have since adopted it: `lambada` `2.7.0`
 `v1.11.0` (Swift, adopted `humane-swift`'s equivalent `v0.9.0`) -- see each
 repo's own `docs/COWORK.md`.
 
+## `v0.9.3` (working, not yet finalized): flattened, `distance_in_time`/`time_ago` split
+
+Still converging on this one -- tagged as `0.9.3`, not `1.0.0`, on purpose.
+
+**`Humane::TimeFormatter`/`Humane::SizeFormatter` are gone.** Their class
+methods move directly onto the `Humane` module: `Humane.human_size`,
+`Humane.distance_in_time`, `Humane.time_ago`. Once `.new` was already gone
+(`v0.9.0`), the class layer held no state either -- same reasoning `humane`
+(Go) went through dropping its formatter structs, just one level later here
+since Ruby's class methods didn't need the `.new` step Go's did. `humane`
+(Go) already calls its functions directly off the `humane` package;
+`humane-swift` picked up the equivalent flatten in the same session (one
+`Humane` enum instead of two) -- see each repo's own `docs/COWORK.md`.
+
+No `include`-able mixin added despite this being the natural place to graft
+one on (Ruby, unlike Go/Swift, could support `include Humane` for bare
+`time_ago`/`human_size` in a consumer's own scope, ActionView-style).
+Checked against the actual precedent this was modeled on: `scandalous`'s
+`web.rb` used to `include ActionView::Helpers::DateHelper`/`NumberHelper`,
+but dropped both once `humane-ruby` existed, replacing them with its own
+Sinatra `helpers do` block wrapping `Humane.human_size`/`.time_ago` -- the
+bare-name-in-a-view ergonomics already live at the consumer layer, not
+inside this gem. Go and Swift don't have an equivalent mixin mechanism at
+all, so adding one here would be a Ruby-only branch in the API shape for a
+need no real consumer actually has. Left out.
+
+**`.time_ago` (the old two-argument class method) is renamed
+`.distance_in_time`.** A new one-argument `.time_ago(at, **opts)` takes its
+place, supplying `Time.now` as `relative_to` internally. Same naming split
+as ActionView's own `distance_of_time_in_words`/`time_ago_in_words` --
+deliberately borrowed rather than invented. The short names (`time_ago`,
+`human_size`) stay reserved for the "format a string for a view" contract;
+anything returning something richer than a string in the future gets a
+longer, explicit name instead of competing for the short one. `humane` (Go)
+and `humane-swift` picked up the identical split in the same session
+(`DistanceInTime`/`TimeAgo`, `distanceInTime`/`timeAgo`).
+
+Not invented from scratch -- `lambada`'s template FuncMap and `zouk`'s
+`ScanEntry.timeAgo` computed property had already hand-built this same
+two-tier shape independently; see `humane`'s own `docs/COWORK.md` `v0.9.3`
+entry for the full cross-repo evidence, summarized once there rather than
+three times.
+
+Written by inspection; `bundle exec rspec` still isn't runnable in this
+sandbox (no `bundle` executable, only the `bundler` gem library -- see
+"Sandbox limitation" above), but `ruby -Ilib` smoke-testing confirmed
+`Humane.human_size`/`.distance_in_time`/`.time_ago` load and behave as
+expected before committing. Not yet confirmed via a real `bundle exec
+rspec` run, and not yet tagged/pushed/published. `lambada`/`zouk`/
+`scandalous` adoption is a deliberately separate follow-up.
+
 ## Next up
 
 1. `human_size`'s 3-significant-figure rounding rule reproduces every known

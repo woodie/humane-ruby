@@ -6,18 +6,17 @@ each note is attached to. The source itself now carries at most one
 short line at any given spot -- anything longer that would previously
 have been a multi-line comment lives here instead.
 
-## lib/humane/size_formatter.rb
+## lib/humane/size.rb (formerly lib/humane/size_formatter.rb, renamed in v0.9.3)
 
-### `Humane::SizeFormatter` (class)
-Formats byte counts the way Finder does, as a class method
+### `Humane.human_size` (formerly `Humane::SizeFormatter.human_size`)
+Formats byte counts the way Finder does, as a module method
 (`.human_size`) rather than an instantiated formatter. Through `v0.6.0`
 this mirrored `ByteCountFormatter`'s own shape (`SizeFormatter.new.string`)
-on purpose. `v0.9.0` drops that -- once there was no per-instance
+on purpose. `v0.9.0` dropped instantiation -- once there was no per-instance
 configuration to hold, `.new` was ceremony left over from mirroring
-Foundation rather than something this design still needs. See
-`docs/COWORK.md`'s `v0.9.0` entry.
-
-### `Humane::SizeFormatter.human_size`
+Foundation rather than something this design still needs. `v0.9.3` dropped
+the `SizeFormatter` class itself, moving `.human_size` directly onto the
+`Humane` module -- see `docs/COWORK.md`'s `v0.9.0` and `v0.9.3` entries.
 Bakes in three corrections found by comparing this gem's original
 2-significant-digit port against real `ByteCountFormatter` output (via
 `humane-swift`'s real-hardware testing -- see that repo's
@@ -48,7 +47,7 @@ for what still needs a real `ByteCountFormatter` comparison.
     human_size(1_500_000)  == "1.5 MB"
     human_size(5_240_000_000) == "5.24 GB"
 
-### `Humane::SizeFormatter.format_significant`
+### `Humane.format_significant` (formerly `Humane::SizeFormatter.format_significant`)
 Rounds `value` to `sig_figs` significant figures, then trims trailing
 fractional zeros (and the decimal point itself, if nothing remains after
 it) -- keeps `"1.5 MB"` from becoming `"1.50 MB"` while still letting
@@ -56,9 +55,9 @@ it) -- keeps `"1.5 MB"` from becoming `"1.50 MB"` while still letting
 before the decimal point) uses `Math.log10(value).floor + 1` rather than
 `.ceil` specifically to avoid a boundary bug at exact powers of 10.
 
-## lib/humane/time_formatter.rb
+## lib/humane/time.rb (formerly lib/humane/time_formatter.rb, renamed in v0.9.3)
 
-### `Humane::TimeFormatter` (class)
+### `Humane.distance_in_time` (formerly `Humane::TimeFormatter.time_ago`, renamed in v0.9.3)
 Formats one time relative to another the way ActionView's
 `distance_of_time_in_words` does for wording, but direction-aware like
 `RelativeDateTimeFormatter` -- `"X ago"`/`"in X"`, chosen automatically
@@ -68,16 +67,21 @@ requires, and whose own `.abs` collapses future distances into a
 past-tense string as a known, unfixed bug -- see this repo's original
 `docs/COWORK.md` "Why this exists" section).
 
-Now a class method (`.time_ago`), not an instantiated formatter --
-`v0.6.0` and earlier mirrored `RelativeDateTimeFormatter`'s shape
+A module method, not an instantiated formatter -- `v0.6.0` and earlier
+mirrored `RelativeDateTimeFormatter`'s shape
 (`TimeFormatter.new(approximate: true).string(...)`) on purpose; `v0.9.0`
-drops that in favor of ActionView's own bare-helper-method shape
+dropped that in favor of ActionView's own bare-helper-method shape
 (`distance_of_time_in_words`), since the actual goal is dropping into a
-Rails-style view as simply as ActionView does. Configuration moves from
-constructor keyword arguments to call-site keyword arguments -- Ruby's
-native kwargs make this a plain rename, not a redesign of the mechanism
-(unlike Go, which needed a new `TimeOptions` type; see `humane`'s own
-`docs/COMMENTS.md`).
+Rails-style view as simply as ActionView does. `v0.9.3` dropped the
+`TimeFormatter` class itself (moving `.time_ago` directly onto `Humane`)
+and renamed the two-argument method itself to `.distance_in_time`, adding
+a new one-argument `.time_ago` convenience wrapping it with `Time.now` --
+see `docs/COWORK.md`'s `v0.9.3` entry for why (the ActionView
+`distance_of_time_in_words`/`time_ago_in_words` naming pair this mirrors).
+Configuration moves from constructor keyword arguments to call-site
+keyword arguments -- Ruby's native kwargs make this a plain rename, not a
+redesign of the mechanism (unlike Go, which needed a new `TimeOptions`
+type; see `humane`'s own `docs/COMMENTS.md`).
 
 ### `approximate:` default flips `false` -> `true`
 Matches ActionView's own `distance_of_time_in_words` (which has no toggle
@@ -92,18 +96,19 @@ gets its own literal default in the method signature, so there's no
 single "zero value" that has to serve every field at once.
 
 ### `when_nil:`
-Added in `v0.9.0` alongside `time_ago` accepting a `nil` `at`. Motivated
-by `zouk`'s Swift `ScanEntry.timeAgo(relativeTo:)`, which used to guard a
-possibly-unparsable timestamp itself and hand the caller a value that
-still needed its own fallback one layer up -- two guard points for one
-final string. `time_ago` now takes `nil` directly and a caller-supplied
+Added in `v0.9.0` alongside `time_ago` (now `distance_in_time`, see above)
+accepting a `nil` `at`. Motivated by `zouk`'s Swift
+`ScanEntry.timeAgo(relativeTo:)`, which used to guard a possibly-unparsable
+timestamp itself and hand the caller a value that still needed its own
+fallback one layer up -- two guard points for one final string.
+`distance_in_time`/`time_ago` now take `nil` directly and a caller-supplied
 `when_nil:` fallback, collapsing both layers into one call. The fallback
 value stays app-specific (`nil` by default, not a hardcoded "unknown
 time" baked into this gem) -- consistent with keeping ActionView-flavored
 vocabulary opt-in rather than assumed, the same principle
 `approximate`/`include_seconds` already follow.
 
-### `Humane::TimeFormatter.time_ago`
+### `distance_in_time`'s bucketing (formerly `Humane::TimeFormatter.time_ago`)
 Buckets are chosen from `distance_in_minutes` (seconds/60, rounded once
 via Ruby's round-half-up `Float#round`), not by re-dividing raw seconds
 independently per unit. The old per-unit approach let rounding carry
@@ -118,10 +123,17 @@ starts at 89:30, not 90:00 -- see humane-ruby issue #1
 ports, truncated here at the "1 day" row (week/month/year buckets are
 out of scope -- see "Scope" in the README).
 
-    time_ago(t, t)                        == "less than a minute ago"
-    time_ago(t - 45, t)                   == "1 minute ago"
-    time_ago(t - 180, t)                  == "3 minutes ago"
-    time_ago(t + 180, t)                  == "in 3 minutes"
-    time_ago(t - 15 * 3600, t)            == "about 15 hours ago"
-    time_ago(t - 30 * 3600, t)            == "1 day ago" # no "about" -- ActionView's table has none on the day bucket
-    time_ago(nil, t, when_nil: "an unknown time") == "an unknown time"
+    distance_in_time(t, t)                        == "less than a minute ago"
+    distance_in_time(t - 45, t)                   == "1 minute ago"
+    distance_in_time(t - 180, t)                  == "3 minutes ago"
+    distance_in_time(t + 180, t)                  == "in 3 minutes"
+    distance_in_time(t - 15 * 3600, t)            == "about 15 hours ago"
+    distance_in_time(t - 30 * 3600, t)            == "1 day ago" # no "about" -- ActionView's table has none on the day bucket
+    distance_in_time(nil, t, when_nil: "an unknown time") == "an unknown time"
+
+### `Humane.time_ago` (new in v0.9.3)
+A one-argument convenience over `distance_in_time`, supplying `Time.now` as
+`relative_to` -- see `docs/COWORK.md`'s `v0.9.3` entry for why. Thin
+passthrough, no bucketing logic of its own; `time_ago_spec.rb` covers it
+with three cases rather than re-testing everything `distance_in_time`
+already does.
