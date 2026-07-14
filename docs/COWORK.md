@@ -318,9 +318,9 @@ sandbox (no `bundle` executable, only the `bundler` gem library -- see
 expected before committing. Confirmed for real on woodie's Mac: `make
 check` (`bundle exec standardrb` + `bundle exec rspec spec`) -- 39/39
 examples, 0 failures. Tagged, pushed, and released:
-https://github.com/woodie/humane-ruby/releases/tag/v0.9.3. `gem build`/`gem
-push` to RubyGems not yet confirmed as of this writing -- see whether that
-completed before treating `0.9.3` as fully published. `lambada`/`zouk`/
+https://github.com/woodie/humane-ruby/releases/tag/v0.9.3, and published to
+RubyGems as `humane` `0.9.3` (confirmed via `gem push`:
+"Successfully registered gem: humane (0.9.3)"). `lambada`/`zouk`/
 `scandalous` adoption is a deliberately separate follow-up.
 
 ## Next up
