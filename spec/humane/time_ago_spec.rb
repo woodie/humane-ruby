@@ -6,21 +6,32 @@ require "spec_helper"
 # Time.now as relative_to -- see distance_in_time_spec.rb for the exhaustive
 # wording/bucket coverage this doesn't need to repeat.
 RSpec.describe "Humane.time_ago" do
+  subject { Humane.time_ago(time, **opts) }
+
+  let(:opts) { {} }
+
   context "just now" do
+    let(:time) { Time.now }
+
     it "displays less than a minute ago" do
-      expect(Humane.time_ago(Time.now)).to eq("less than a minute ago")
+      expect(subject).to eq("less than a minute ago")
     end
   end
 
   context "3 minutes ago" do
+    let(:time) { Time.now - 180 }
+
     it "forwards to distance_in_time with Time.now as relative_to" do
-      expect(Humane.time_ago(Time.now - 180)).to eq("3 minutes ago")
+      expect(subject).to eq("3 minutes ago")
     end
   end
 
   context "when at is nil" do
+    let(:time) { nil }
+    let(:opts) { { when_nil: "an unknown time" } }
+
     it "returns when_nil without formatting" do
-      expect(Humane.time_ago(nil, when_nil: "an unknown time")).to eq("an unknown time")
+      expect(subject).to eq("an unknown time")
     end
   end
 end
