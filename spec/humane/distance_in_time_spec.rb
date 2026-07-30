@@ -99,7 +99,7 @@ RSpec.describe "Humane.distance_in_time" do
   end
 
   context "with include_seconds: true" do
-    let(:opts) { { include_seconds: true } }
+    let(:opts) { {include_seconds: true} }
 
     context "just now" do
       let(:at) { base }
@@ -135,7 +135,7 @@ RSpec.describe "Humane.distance_in_time" do
   end
 
   context "with approximate: false" do
-    let(:opts) { { approximate: false } }
+    let(:opts) { {approximate: false} }
 
     context "1 hour ago" do
       let(:at) { base - 3600 }
@@ -158,7 +158,7 @@ RSpec.describe "Humane.distance_in_time" do
     let(:at) { nil }
 
     context "and when_nil is given" do
-      let(:opts) { { when_nil: "an unknown time" } }
+      let(:opts) { {when_nil: "an unknown time"} }
 
       it "returns when_nil without formatting" do
         expect(subject).to eq("an unknown time")
@@ -175,7 +175,7 @@ RSpec.describe "Humane.distance_in_time" do
   # Boundary regression coverage for ActionView's distance_of_time_in_words bucket table (truncated at the "1 day" row); each context below sits on one cutoff second from that table.
   context "at the approximate-distance bucket table boundaries" do
     context "with approximate: false" do
-      let(:opts) { { approximate: false } }
+      let(:opts) { {approximate: false} }
 
       context "29 seconds ago" do
         let(:at) { base - 29 }

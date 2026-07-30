@@ -28,7 +28,7 @@ RSpec.describe "Humane.time_ago" do
 
   context "when at is nil" do
     let(:time) { nil }
-    let(:opts) { { when_nil: "an unknown time" } }
+    let(:opts) { {when_nil: "an unknown time"} }
 
     it "returns when_nil without formatting" do
       expect(subject).to eq("an unknown time")
