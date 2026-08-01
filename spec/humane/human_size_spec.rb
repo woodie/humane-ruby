@@ -8,7 +8,7 @@ RSpec.describe "Humane.human_size" do
   context "with 0 bytes" do
     let(:bytes) { 0 }
 
-    it "formats as Zero KB, matching ByteCountFormatter's own wording" do
+    it "formats as Zero KB" do
       expect(subject).to eq("Zero KB")
     end
   end
@@ -24,7 +24,7 @@ RSpec.describe "Humane.human_size" do
   context "with a small byte count" do
     let(:bytes) { 7 }
 
-    it "spells out bytes rather than using a B label" do
+    it "spells out bytes" do
       expect(subject).to eq("7 bytes")
     end
   end
@@ -32,12 +32,12 @@ RSpec.describe "Humane.human_size" do
   context "with 999 bytes" do
     let(:bytes) { 999 }
 
-    it "stays in bytes, just under the 1 KB threshold" do
+    it "stays in bytes" do
       expect(subject).to eq("999 bytes")
     end
   end
 
-  context "with the shared 79992-byte fixture used by lambada/scandalous" do
+  context "with 79992 bytes" do
     let(:bytes) { 79_992 }
 
     it "formats as 80 KB" do
@@ -48,15 +48,15 @@ RSpec.describe "Humane.human_size" do
   context "with a real file's byte count" do
     let(:bytes) { 225_935 }
 
-    it "matches Finder's reported size" do
+    it "formats as 226 KB" do
       expect(subject).to eq("226 KB")
     end
   end
 
-  context "with zouk's ByteCountFormatter(.file) fixture" do
+  context "with 500000 bytes" do
     let(:bytes) { 500_000 }
 
-    it "matches its output" do
+    it "formats as 500 KB" do
       expect(subject).to eq("500 KB")
     end
   end

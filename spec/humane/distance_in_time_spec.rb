@@ -8,7 +8,7 @@ RSpec.describe "Humane.distance_in_time" do
   let(:base) { Time.new(2026, 7, 8, 12, 0, 0, "+00:00") }
   let(:opts) { {} }
 
-  context "with no keyword arguments (the recommended defaults: approximate true, include_seconds false -- matching ActionView's own defaults)" do
+  context "with no keyword arguments" do
     context "just now" do
       let(:at) { base }
 
@@ -60,7 +60,7 @@ RSpec.describe "Humane.distance_in_time" do
     context "30 hours ago" do
       let(:at) { base - (30 * 3600) }
 
-      it "rolls up to 1 day ago, with no about (ActionView's table has none on the day bucket)" do
+      it "rolls up to 1 day ago, with no about" do
         expect(subject).to eq("1 day ago")
       end
     end
@@ -154,21 +154,20 @@ RSpec.describe "Humane.distance_in_time" do
     end
   end
 
-  context "when at is nil" do
+  context "when at is nil and when_nil is given" do
+    let(:at) { nil }
+    let(:opts) { {when_nil: "an unknown time"} }
+
+    it "returns when_nil without formatting" do
+      expect(subject).to eq("an unknown time")
+    end
+  end
+
+  context "when at is nil and when_nil is left unset" do
     let(:at) { nil }
 
-    context "and when_nil is given" do
-      let(:opts) { {when_nil: "an unknown time"} }
-
-      it "returns when_nil without formatting" do
-        expect(subject).to eq("an unknown time")
-      end
-    end
-
-    context "and when_nil is left unset" do
-      it "returns nil" do
-        expect(subject).to be_nil
-      end
+    it "returns nil" do
+      expect(subject).to be_nil
     end
   end
 
@@ -258,7 +257,7 @@ RSpec.describe "Humane.distance_in_time" do
       end
     end
 
-    context "with no keyword arguments (approximate true by default)" do
+    context "with no keyword arguments" do
       context "44 minutes 29 seconds ago" do
         let(:at) { base - (44 * 60 + 29) }
 
