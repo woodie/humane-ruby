@@ -7,10 +7,11 @@
 lint:
 	bundle exec standardrb
 
-# Verbose on purpose -- rspec's documentation formatter, the Ruby equivalent
-# of Go's `ginkgo-fd -r` / Swift's `swift test | xctidy`.
+# Verbose on purpose -- rutidy's `fs` (RSpec/Mocha-style) rendering of the
+# same tree, the Ruby equivalent of Go's `ginkgo-fd -r` / Swift's
+# `swift test | xctidy`.
 test:
-	bundle exec rspec -fd spec
+	bundle exec rutidy -fs spec
 
 # Terser than `test` on purpose: rspec's default progress formatter prints a
 # dot per passing example and suppresses per-example chatter, but always
