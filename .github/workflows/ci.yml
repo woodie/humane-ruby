@@ -23,5 +23,7 @@ jobs:
       with:
         ruby-version: ${{ matrix.ruby-version }}
         bundler-cache: true # runs 'bundle install' and caches installed gems automatically
+      env:
+        BUNDLE_WITHOUT: lint # standardrb's rubocop chain isn't run in CI and keeps bumping its own Ruby floor
     - name: Run tests
       run: bundle exec rspec
