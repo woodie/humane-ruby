@@ -63,7 +63,7 @@ Humane.time_ago(at)                      # same defaults, relative_to is Time.no
 - **`include_seconds`** (default `false`): under 30 seconds, collapses to
   `"less than a minute ago"`/`"in less than a minute"` instead of an exact
   second count. Matches ActionView's `include_seconds` default.
-- **`when_nil`** (default `nil`): if `at` is `nil`, both methods return this
+- **`when_nil`** (default `""`): if `at` is `nil`, both methods return this
   value without formatting -- for a scan, download, or other record that
   doesn't have a timestamp yet.
 

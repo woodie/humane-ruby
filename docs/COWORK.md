@@ -24,7 +24,40 @@ instantiation: `Humane.human_size`, `Humane.distance_in_time`, `Humane.time_ago`
   block wrapping `Humane.human_size`/`.time_ago` once this gem existed -- the
   bare-name-in-a-view ergonomics belong at the consumer layer, not in this gem.
 - **`when_nil:` collapses a guard-then-fallback into one call**, matching `humane`
-  (Go)'s `WhenNil`.
+  (Go)'s `WhenNil`. Defaults to `""`, not `nil` -- see "Brought `when_nil` to
+  parity" below for why that changed.
+
+## Brought `when_nil` to parity: defaults to `""`, not `nil`
+
+A cross-language test comparison (all four `humane` repos, same session)
+found `distance_in_time`'s "nil `at`, no fallback set" case actually
+returned different things per language: Go/Swift/Kotlin all default their
+`WhenNil`/`whenNil` to `""` explicitly; this gem alone defaulted `when_nil:`
+to `nil`, inherited from matching ActionView's own helper conventions
+rather than from anything Ruby-specific. Once the goal was named directly
+-- `humane`'s own cross-language consistency matters more than any one
+language's ecosystem convention -- keeping Ruby's `nil` stopped making
+sense. Changed `lib/humane/time.rb`'s default to `when_nil: ""`, updated
+`distance_in_time_spec.rb`'s "returns nil"/`be_nil` case to "returns an
+empty string"/`eq("")`, and updated the README/`docs/COMMENTS.md`
+explanations that documented the old default.
+
+Real risk checked before changing, not just assumed safe: `nil` and `""`
+differ in Ruby truthiness (`if result`/`result || fallback` behave
+differently), so this is a genuine behavior change for any caller that
+branches on the return value. `scandalous` (the one real Ruby consumer)
+checked clean -- `web.rb`'s `time_ago(time)` always passes a real
+timestamp from a listed file, never `nil`, so it never exercises this
+path today.
+
+`TimeAgo`/`timeAgo` accepting a nilable `at` at all stays split across the
+family on purpose, not brought to parity here -- Go's `TimeAgo(at
+time.Time, ...)` and Kotlin's `timeAgo(at: Instant, ...)` both take a
+non-nullable `at`, while this gem's `time_ago`/Swift's `timeAgo` accept
+`nil`. That's a difference in how much nil-checking each language's type
+system requires at the call site, not in what happens once nil is
+actually handled -- fine to leave differing, unlike the return value
+above.
 
 ## Testing
 

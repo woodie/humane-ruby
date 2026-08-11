@@ -166,8 +166,8 @@ RSpec.describe "Humane.distance_in_time" do
   context "when at is nil and when_nil is left unset" do
     let(:at) { nil }
 
-    it "returns nil" do
-      expect(subject).to be_nil
+    it "returns an empty string" do
+      expect(subject).to eq("")
     end
   end
 
