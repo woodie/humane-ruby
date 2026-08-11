@@ -9,7 +9,7 @@ module Humane
   # one-argument convenience. See docs/COMMENTS.md.
   #
   #   Humane.distance_in_time(Time.now - 180, Time.now) #=> "3 minutes ago"
-  def self.distance_in_time(at, relative_to, approximate: true, include_seconds: false, when_nil: nil)
+  def self.distance_in_time(at, relative_to, approximate: true, include_seconds: false, when_nil: "")
     return when_nil if at.nil?
 
     seconds = relative_to - at

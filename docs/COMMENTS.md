@@ -103,10 +103,14 @@ timestamp itself and hand the caller a value that still needed its own
 fallback one layer up -- two guard points for one final string.
 `distance_in_time`/`time_ago` now take `nil` directly and a caller-supplied
 `when_nil:` fallback, collapsing both layers into one call. The fallback
-value stays app-specific (`nil` by default, not a hardcoded "unknown
-time" baked into this gem) -- consistent with keeping ActionView-flavored
-vocabulary opt-in rather than assumed, the same principle
-`approximate`/`include_seconds` already follow.
+value stays app-specific -- not a hardcoded "unknown time" baked into this
+gem -- consistent with keeping ActionView-flavored vocabulary opt-in
+rather than assumed, the same principle `approximate`/`include_seconds`
+already follow. Default changed from `nil` to `""` in a later pass (see
+`docs/COWORK.md`) to match `humane`/`humane-swift`/`humane-kotlin`, all
+three of which already defaulted to an empty string -- `nil` here was
+this gem alone quietly deviating from the rest of the family, not a
+Ruby-specific requirement.
 
 ### `distance_in_time`'s bucketing (formerly `Humane::TimeFormatter.time_ago`)
 Buckets are chosen from `distance_in_minutes` (seconds/60, rounded once
