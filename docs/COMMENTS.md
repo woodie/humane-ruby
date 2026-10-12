@@ -17,43 +17,44 @@ configuration to hold, `.new` was ceremony left over from mirroring
 Foundation rather than something this design still needs. `v0.9.3` dropped
 the `SizeFormatter` class itself, moving `.human_size` directly onto the
 `Humane` module -- see `docs/COWORK.md`'s `v0.9.0` and `v0.9.3` entries.
-Bakes in three corrections found by comparing this gem's original
-2-significant-digit port against real `ByteCountFormatter` output (via
-`humane-swift`'s real-hardware testing -- see that repo's
-`docs/COWORK.md`, "Current state"):
+Formats bytes the way Finder does:
 
 - `0` reads `"Zero KB"`, not `"0 B"` -- a hardcoded special case;
   `ByteCountFormatter` doesn't run its usual rounding logic for zero.
 - Values under 1000 spell out `"byte"`/`"bytes"` (`"1 byte"`, `"7 bytes"`)
   rather than using a `"B"` label.
-- Everything else rounds to 3 significant figures (not 2) via
-  `format_significant`, then gets unit-labeled. The old rule (1 decimal
-  below 10, none at or above) undercounted precision under 10:
-  `5,240,000,000` bytes is `"5.24 GB"` on real hardware, not `"5.2 GB"`.
+- Everything else is scaled to its unit, rounded half up to that unit's
+  `DECIMAL_PLACES` (`KB` 0, `MB` 1, `GB` and above 2), then has trailing
+  fractional zeros trimmed (`"2 MB"`, not `"2.0 MB"`).
+- If rounding reaches 1000 of a unit, the value moves up to the next unit
+  and is re-rounded there: `999_999` is `"1 MB"`, not `"1000 KB"`, and
+  `999_960_000` is `"1 GB"`, not `"1000 MB"`.
 
-The 3-significant-figure rule was chosen over a narrower "just fix the GB
-case" patch because it's the only single rule found that reproduces every
-known fixture at once -- including the two cross-checked against real
-hardware before this change (`225_935` -> `"226 KB"`, `500_000` ->
-`"500 KB"`) and the existing `1_500_000` -> `"1.5 MB"` fixture, alongside
-the new GB finding. Still an inference from a small fixture set, not
-confirmed across every magnitude -- see `docs/COWORK.md`'s `v0.9.0` entry
-for what still needs a real `ByteCountFormatter` comparison.
+This is `ByteCountFormatter`'s default ("adaptive") behavior, confirmed
+against real Finder output in `humane` issue #3. Earlier versions rounded
+everything to 3 significant figures instead. That rule matched every
+fixture the suite had at the time, but was wrong for most sizes under
+10 MB (`4_132_383` is `"4.1 MB"`, not `"4.13 MB"`) and above 100 MB
+(`123_456_789` is `"123.5 MB"`, not `"123 MB"`).
 
-    human_size(0)          == "Zero KB"
-    human_size(1)          == "1 byte"
-    human_size(79_992)     == "80 KB"
-    human_size(225_935)    == "226 KB"
-    human_size(1_500_000)  == "1.5 MB"
-    human_size(5_240_000_000) == "5.24 GB"
+    human_size(0)              == "Zero KB"
+    human_size(1)              == "1 byte"
+    human_size(2_579)          == "3 KB"
+    human_size(225_935)        == "226 KB"
+    human_size(999_999)        == "1 MB"
+    human_size(4_132_383)      == "4.1 MB"
+    human_size(123_456_789)    == "123.5 MB"
+    human_size(5_240_000_000)  == "5.24 GB"
+    human_size(12_345_678_901) == "12.35 GB"
 
-### `Humane.format_significant` (formerly `Humane::SizeFormatter.format_significant`)
-Rounds `value` to `sig_figs` significant figures, then trims trailing
-fractional zeros (and the decimal point itself, if nothing remains after
-it) -- keeps `"1.5 MB"` from becoming `"1.50 MB"` while still letting
-`"5.24 GB"` keep both of its non-zero decimal digits. `magnitude` (digits
-before the decimal point) uses `Math.log10(value).floor + 1` rather than
-`.ceil` specifically to avoid a boundary bug at exact powers of 10.
+### `Humane.round_for_unit`
+Rounds the scaled value with `Float#round` (half away from zero), so
+`1_500` bytes is `"2 KB"`, matching Finder.
+
+### `Humane.trim_zeros`
+Formats an already-rounded value to its unit's decimal places, then trims
+trailing fractional zeros (and the decimal point itself, if nothing remains
+after it).
 
 ## lib/humane/time.rb (formerly lib/humane/time_formatter.rb, renamed in v0.9.3)
 
