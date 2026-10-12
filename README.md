@@ -5,12 +5,10 @@
 [![Release](https://img.shields.io/github/v/release/woodie/humane-ruby.svg)](https://github.com/woodie/humane-ruby/releases/latest)
 [![License](https://img.shields.io/github/license/woodie/humane-ruby.svg)](LICENSE)
 
-Human-readable file sizes (1000-based math, capitalized labels, the way Mac
-Finder displays them) and relative times (`"3 minutes ago"`, `"in 3 hours"`)
-for Ruby and Go HTML templates -- as simple to drop in as ActionView's own
-helpers, with output that's consistent with
-[`humane`](https://github.com/woodie/humane) (Go) and
-[`humane-swift`](https://github.com/woodie/humane-swift).
+File sizes that read exactly the way macOS Finder shows them (`"4.1 MB"`,
+`"226 KB"`), and relative dates in Rails ActionView's wording (`"about 3 hours
+ago"`, `"in 3 minutes"`), for Ruby -- the same wording Rails apps already use,
+without pulling in all of Rails.
 
 ```ruby
 require "humane"
@@ -36,6 +34,26 @@ or in a `Gemfile`:
 gem "humane"
 ```
 
+## File sizes
+
+`Humane.human_size` matches Foundation's `ByteCountFormatter` (file style), which is what
+macOS Finder shows, and is checked against real Finder output:
+
+- 1000-based units with capitalized labels: `KB`, `MB`, `GB`, `TB`, and up.
+- A fixed number of decimal places per unit -- none for KB, one for MB, two
+  for GB and above -- with trailing zeros dropped (`"2 MB"`, not `"2.0 MB"`).
+- Rounds half up, and moves up a unit when rounding reaches 1000:
+  999,999 bytes is `"1 MB"`, not `"1000 KB"`.
+- Zero bytes is `"Zero KB"`, and anything under 1000 bytes is spelled out
+  (`"1 byte"`, `"7 bytes"`).
+
+```ruby
+Humane.human_size(2_579)         # "3 KB"
+Humane.human_size(4_132_383)     # "4.1 MB"
+Humane.human_size(999_999)       # "1 MB"
+Humane.human_size(5_240_000_000) # "5.24 GB"
+```
+
 ## `distance_in_time` and `time_ago`
 
 Two entry points, same naming split as ActionView's own
@@ -46,6 +64,10 @@ Two entry points, same naming split as ActionView's own
 - **`time_ago(at, **opts)`** -- a one-argument convenience for the common
   "drop into a view" case. Supplies `Time.now` as `relative_to` internally;
   everything else is identical to `distance_in_time`.
+
+The wording follows ActionView's `distance_of_time_in_words`, with one
+difference: direction is picked for you. A past time reads `"3 minutes ago"`
+and a future one `"in 3 minutes"`, where ActionView leaves that to the caller.
 
 Both share the same keyword options and recommended defaults, already
 matching ActionView's own `distance_of_time_in_words` defaults -- pass none
