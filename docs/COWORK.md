@@ -68,7 +68,7 @@ check` on the user's own Mac.
 
 ## Current status
 
-`v0.9.3`, published to RubyGems as `humane`. Adopted by `scandalous`.
+`v0.9.4`, published to RubyGems as `humane`. Adopted by `scandalous`.
 
 ## Open items
 
